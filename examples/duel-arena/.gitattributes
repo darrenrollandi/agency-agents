@@ -1,0 +1,7 @@
+# Luau/Rojo tooling (StyLua, Selene) expects LF. Overrides core.autocrlf on Windows.
+*.luau text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.md   text eol=lf
+.luaurc text eol=lf
+.gitattributes text eol=lf
