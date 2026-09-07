@@ -13,6 +13,7 @@ local BIND_NAME = "DuelArenaRecoil"
 local CameraController = {}
 
 local recoilDegrees = 0
+local fieldOfView = CameraConfig.FieldOfView
 
 -- Kick the aim up by `degrees`; it recovers over the next frames.
 function CameraController.kick(degrees: number)
@@ -20,7 +21,17 @@ function CameraController.kick(degrees: number)
 end
 
 local function applyFov()
-	Workspace.CurrentCamera.FieldOfView = CameraConfig.FieldOfView
+	Workspace.CurrentCamera.FieldOfView = fieldOfView
+end
+
+-- Settings panel: change the FOV (clamped to the Config/Camera range).
+function CameraController.setFieldOfView(value: number)
+	fieldOfView = math.clamp(value, CameraConfig.FieldOfViewMin, CameraConfig.FieldOfViewMax)
+	applyFov()
+end
+
+function CameraController.getFieldOfView(): number
+	return fieldOfView
 end
 
 function CameraController.start()

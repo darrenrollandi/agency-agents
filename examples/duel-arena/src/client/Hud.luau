@@ -40,14 +40,15 @@ function Hud.get(): ScreenGui
 	return gui :: ScreenGui
 end
 
--- A named element of the HUD. Rebuilds the whole HUD once if the place's layout predates the element.
+-- A uniquely named element anywhere in the HUD. Rebuilds the whole HUD once if the place's layout
+-- predates the element.
 function Hud.element(name: string): GuiObject
 	local gui = Hud.get()
-	local found = gui:FindFirstChild(name)
+	local found = gui:FindFirstChild(name, true)
 	if not found then
 		gui = rebuild(gui.Parent :: Instance, `is missing "{name}"`)
 		cached = gui
-		found = gui:FindFirstChild(name)
+		found = gui:FindFirstChild(name, true)
 	end
 	return found :: GuiObject
 end

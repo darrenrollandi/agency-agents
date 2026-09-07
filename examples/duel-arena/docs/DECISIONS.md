@@ -121,3 +121,15 @@ No soft currency until D asks for one: XP → level → skins keeps the loop leg
 ## 07/09/2026 — Locker UI is built in code
 
 The locker is a dynamic list (skins × ownership × level), the one case CLAUDE.md allows programmatic layout for. It lives in `LockerController`, toggles with L / gamepad Select in the lobby only, and frees the mouse while open by forcing `MouseBehavior = Default` after the camera step each frame (first person re-locks it otherwise). Rejected: a StarterGui layout with placeholder rows (would need code to clone rows anyway).
+
+## 07/09/2026 — HUD panels are static layouts in StarterGui, found by unique name
+
+Results, settings and the lobby hint block are fixed layouts, so per CLAUDE.md they live in `StarterGui.DuelHud`, generated once by `Shared/Util/HudLayout` (the setup snippet) and editable in Studio. Controllers locate elements with a recursive `FindFirstChild(name, true)`, so every element name in the HUD is unique and renaming one in Studio means renaming it in code. If the place's HUD predates an element the client rebuilds the whole HUD from code with a warning rather than failing. Panels expose an `Open` attribute so other UI and tests can toggle them without keyboard input.
+
+## 07/09/2026 — Settings are two numbers, saved to the profile, adjustable by keyboard or mouse
+
+Sensitivity (0.2–3.0, applied to `UserInputService.MouseDeltaSensitivity`) and FOV (60–100). Validated for range by the Net definition, persisted by ProgressionService (the only Profile.Data writer) after a 0.6 s debounce, loaded from the ProgressionSnapshot on join. Every panel that needs the cursor uses `client/MouseFree`, a ref-counted helper that forces `MouseBehavior = Default` after the camera step; arrow keys work as well because first-person mouse release can't be verified from MCP. Rejected: Roblox's built-in sensitivity slider only (no FOV, no persistence per game).
+
+## 07/09/2026 — Server broadcasts DuelOver before awarding XP
+
+Clients reliable-order events from one server thread, so `DuelService` broadcasts the DuelOver update first and calls `ProgressionService.recordDuel` second. The results panel is therefore already open when `DuelReward` lands and can fill its XP and unlock lines. Found because the smoke test showed an empty XP line.

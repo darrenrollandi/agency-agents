@@ -47,6 +47,8 @@ export type ProgressionSnapshot = {
 	equippedRevolver: string,
 	equippedKnife: string,
 	boostActive: boolean,
+	sensitivity: number,
+	fieldOfView: number,
 }
 
 -- Server → client after a duel: what it earned them.

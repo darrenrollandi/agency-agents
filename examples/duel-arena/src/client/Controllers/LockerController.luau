@@ -5,16 +5,15 @@
 local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local Skins = require(Shared.Config.Skins)
 local Net = require(Shared.Net.Net)
+local MouseFree = require(script.Parent.Parent.MouseFree)
 
 local ACTION_TOGGLE = "ToggleLocker"
-local BIND_MOUSE = "DuelArenaLockerMouse"
+local HOLD_KEY = "Locker"
 
 local player = Players.LocalPlayer
 
@@ -193,14 +192,9 @@ local function setOpen(value: boolean)
 	gui:SetAttribute("Open", value)
 	if value then
 		render()
-		-- First person locks the mouse every frame; free it after the camera runs while the panel is up.
-		RunService:BindToRenderStep(BIND_MOUSE, Enum.RenderPriority.Last.Value, function()
-			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-			UserInputService.MouseIconEnabled = true
-		end)
+		MouseFree.hold(HOLD_KEY)
 	else
-		RunService:UnbindFromRenderStep(BIND_MOUSE)
-		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		MouseFree.release(HOLD_KEY)
 	end
 end
 

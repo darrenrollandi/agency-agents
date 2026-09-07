@@ -3,6 +3,7 @@
 -- ClientToServer remotes MUST set `ratePerSecond` and a pure `validate` so tests can cover it.
 -- Validators only check shape; meaning (alive, ammo, range) is checked by the Service that handles it.
 local Weapons = require(script.Parent.Parent.Config.Weapons)
+local CameraConfig = require(script.Parent.Parent.Config.Camera)
 
 export type Direction = "ClientToServer" | "ServerToClient"
 export type Kind = "Event" | "Unreliable"
@@ -71,6 +72,22 @@ local function validateEquipSkin(...: any): boolean
 	return typeof(skinId) == "string" and #skinId > 0 and #skinId <= 40
 end
 
+-- SaveSettings(sensitivity: number, fieldOfView: number) within the Config/Camera ranges.
+local function validateSaveSettings(...: any): boolean
+	if select("#", ...) ~= 2 then
+		return false
+	end
+	local sensitivity, fov = ...
+	return typeof(sensitivity) == "number"
+		and sensitivity == sensitivity
+		and sensitivity >= CameraConfig.SensitivityMin
+		and sensitivity <= CameraConfig.SensitivityMax
+		and typeof(fov) == "number"
+		and fov == fov
+		and fov >= CameraConfig.FieldOfViewMin
+		and fov <= CameraConfig.FieldOfViewMax
+end
+
 -- UseAbility(slot: 1 | 2)
 local function validateUseAbility(...: any): boolean
 	if select("#", ...) ~= 1 then
@@ -127,6 +144,12 @@ local Definitions: { [string]: Definition } = {
 		direction = "ClientToServer",
 		ratePerSecond = 3,
 		validate = validateEquipSkin,
+	},
+	SaveSettings = {
+		kind = "Event",
+		direction = "ClientToServer",
+		ratePerSecond = 2,
+		validate = validateSaveSettings,
 	},
 	-- ProgressionSnapshot(Types.ProgressionSnapshot) on load and every change.
 	ProgressionSnapshot = { kind = "Event", direction = "ServerToClient" },

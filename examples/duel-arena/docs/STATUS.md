@@ -11,8 +11,28 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 | P2 Weapons | done, gate passed (Mason feel test + exploit test) | `v0.2.0` |
 | P3 Abilities | built, smoke-tested solo, **needs 2v2 gate** | pending `v0.3.0` |
 | P4 Progression + data | built, smoke-tested solo, **needs rejoin + session-lock gate** | pending `v0.4.0` |
-| P5 UI/UX | in progress | |
-| P6–P8 | not started | |
+| P5 UI/UX | built, smoke-tested solo, **needs Mason navigation gate** | pending `v0.5.0` |
+| P6 Monetisation | in progress | |
+| P7–P8 | not started | |
+
+## P5 UI/UX — built 07/09/2026
+
+- **HUD v3** (`StarterGui.DuelHud`, rebuilt from `HudLayout`): everything from P2/P3 plus
+  - `LobbyPanel` (outside duels): `LEVEL 2 · 350 / 600 XP` and the hint *Stand on the blue pad to duel · [L] Locker · [Tab] Settings*.
+  - `ResultsPanel` (DuelOver → Cleanup): VICTORY / DEFEAT / DRAW, your score vs theirs (+ "opponent left" on forfeit), `+100 XP · Level 2 ▲ LEVEL UP`, `Unlocked: Blued Steel · equip it in the Locker`.
+  - `SettingsPanel` (Tab / gamepad Start): Sensitivity 0.2–3.0 and Field of view 60–100 with ◄ ► buttons; keyboard ↑ ↓ picks a row, ← → adjusts. Applies instantly, saves to the profile after 0.6 s (`SaveSettings`, range-validated), loads on join.
+- `client/MouseFree`: ref-counted cursor release shared by the locker and settings.
+- `Hud.element` searches recursively; every HUD element name is unique. Panels expose an `Open` attribute.
+- Server sends the DuelOver update before `DuelReward` so the panel is open when the reward lands.
+- Tests: SaveSettings validator (31 cases, all pass inside Play).
+
+### Verified solo via MCP
+
+Lobby panel visible with level line and hint; settings opens/closes via attribute, rows render `▸ Sensitivity 1.0` / `Field of view 80`, FOV and MouseDeltaSensitivity applied; `SaveSettings(1.5, 90)` persisted to the profile; forfeit duel → results panel with VICTORY, score, XP line with LEVEL UP and the unlock line; back to the lobby panel after Cleanup.
+
+### P5 gate (CLAUDE.md §7): Mason can navigate everything without asking D
+
+Hand Mason the game cold: find the pad, duel, read the result, open the Locker (L), equip a skin, open Settings (Tab), change sensitivity. Note every moment he asks a question; each one is a UI fix.
 
 ## P4 Progression + data — built 07/09/2026
 

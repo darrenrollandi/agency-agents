@@ -274,6 +274,12 @@ handlers.DuelOver = function(duel)
 	else
 		duel.duelWinner = DuelRules.duelWinner(duel.score.A, duel.score.B)
 	end
+	local suffix = if duel.forfeit then " (forfeit)" else ""
+	Log.info(
+		`[Duel {duel.id}] over: {duel.duelWinner or "no winner"} {duel.score.A}-{duel.score.B}{suffix}`
+	)
+	-- Clients must see DuelOver before their reward so the results panel is up when it lands.
+	broadcast(duel)
 	-- XP and stats. Everyone still here gets a result; leavers already forfeited theirs.
 	local results: { ProgressionService.DuelResult } = {}
 	eachPlayer(duel, function(player, team)
@@ -284,11 +290,6 @@ handlers.DuelOver = function(duel)
 		})
 	end)
 	ProgressionService.recordDuel(results)
-	local suffix = if duel.forfeit then " (forfeit)" else ""
-	Log.info(
-		`[Duel {duel.id}] over: {duel.duelWinner or "no winner"} {duel.score.A}-{duel.score.B}{suffix}`
-	)
-	broadcast(duel)
 	scheduleAfter(duel, Rounds.DuelOverSeconds, function()
 		transition(duel, "Cleanup")
 	end)

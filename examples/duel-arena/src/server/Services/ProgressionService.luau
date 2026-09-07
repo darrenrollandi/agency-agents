@@ -43,6 +43,8 @@ local function snapshot(profile: DataService.Profile): Types.ProgressionSnapshot
 		equippedRevolver = profile.Data.EquippedRevolver,
 		equippedKnife = profile.Data.EquippedKnife,
 		boostActive = boostActive(profile),
+		sensitivity = profile.Data.Settings.Sensitivity,
+		fieldOfView = profile.Data.Settings.FieldOfView,
 	}
 end
 
@@ -178,9 +180,20 @@ local function onEquipSkin(player: Player, skinId: string)
 	CombatService.refreshWorldModel(player)
 end
 
+-- Settings are validated for range by the Net definition; here we just persist them.
+local function onSaveSettings(player: Player, sensitivity: number, fieldOfView: number)
+	local profile = DataService.getProfile(player)
+	if not profile then
+		return
+	end
+	profile.Data.Settings.Sensitivity = math.round(sensitivity * 100) / 100
+	profile.Data.Settings.FieldOfView = math.round(fieldOfView)
+end
+
 function ProgressionService.start()
 	DataService.onProfileLoaded(onProfileLoaded)
 	Net.onServer("EquipSkin", onEquipSkin)
+	Net.onServer("SaveSettings", onSaveSettings)
 end
 
 return ProgressionService

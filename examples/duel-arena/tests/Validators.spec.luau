@@ -47,6 +47,18 @@ return {
 		assertEqual((Definitions.Swing.validate :: Validator)(), true, "swing empty")
 	end,
 
+	["SaveSettings enforces the Camera ranges"] = function(assertEqual: Assert)
+		local validate = Definitions.SaveSettings.validate :: Validator
+		assertEqual(validate(1, 80), true, "defaults")
+		assertEqual(validate(0.2, 60), true, "minimums")
+		assertEqual(validate(3, 100), true, "maximums")
+		assertEqual(validate(0.1, 80), false, "sensitivity too low")
+		assertEqual(validate(1, 120), false, "fov too high")
+		assertEqual(validate(0 / 0, 80), false, "NaN")
+		assertEqual(validate("1", 80), false, "string")
+		assertEqual(validate(1), false, "missing fov")
+	end,
+
 	["Equip accepts only known weapons"] = function(assertEqual: Assert)
 		assertEqual(equip("Revolver"), true, "Revolver")
 		assertEqual(equip("Knife"), true, "Knife")
