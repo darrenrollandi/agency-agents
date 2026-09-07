@@ -7,6 +7,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -79,6 +80,7 @@ local function fireRevolver()
 	if predictedAmmo <= 0 then
 		Net.fireServer("Reload") -- empty click reloads
 		SoundController.play("Reload")
+		viewmodel:playReload(Weapons.Revolver.ReloadSeconds)
 		return
 	end
 	lastFireAt = now
@@ -124,7 +126,7 @@ local function swingKnife()
 		return
 	end
 	lastSwingAt = now
-	viewmodel:kick(CameraConfig.ViewmodelKick * 1.5)
+	viewmodel:playSwing(Weapons.Knife.SwingInterval * 0.7)
 	SoundController.play("Swing")
 	Net.fireServer("Swing")
 end
@@ -148,6 +150,7 @@ local function onAction(actionName: string, inputState: Enum.UserInputState, _in
 		then
 			Net.fireServer("Reload")
 			SoundController.play("Reload")
+			viewmodel:playReload(Weapons.Revolver.ReloadSeconds)
 		end
 	elseif actionName == ACTION_REVOLVER then
 		equip("Revolver")
@@ -164,17 +167,19 @@ local function bind()
 		return
 	end
 	bound = true
+	-- On touch devices ContextActionService draws a button per action; titles keep them readable.
+	local touch = UserInputService.TouchEnabled
 	ContextActionService:BindAction(
 		ACTION_FIRE,
 		onAction,
-		false,
+		touch,
 		Enum.UserInputType.MouseButton1,
 		Enum.KeyCode.ButtonR2
 	)
 	ContextActionService:BindAction(
 		ACTION_RELOAD,
 		onAction,
-		false,
+		touch,
 		Enum.KeyCode.R,
 		Enum.KeyCode.ButtonX
 	)
@@ -183,10 +188,18 @@ local function bind()
 	ContextActionService:BindAction(
 		ACTION_SWAP,
 		onAction,
-		false,
+		touch,
 		Enum.KeyCode.Q,
 		Enum.KeyCode.ButtonY
 	)
+	if touch then
+		ContextActionService:SetTitle(ACTION_FIRE, "FIRE")
+		ContextActionService:SetPosition(ACTION_FIRE, UDim2.new(1, -110, 1, -160))
+		ContextActionService:SetTitle(ACTION_RELOAD, "RELOAD")
+		ContextActionService:SetPosition(ACTION_RELOAD, UDim2.new(1, -190, 1, -100))
+		ContextActionService:SetTitle(ACTION_SWAP, "SWAP")
+		ContextActionService:SetPosition(ACTION_SWAP, UDim2.new(1, -190, 1, -220))
+	end
 end
 
 local function unbind()

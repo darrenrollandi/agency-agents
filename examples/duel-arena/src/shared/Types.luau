@@ -30,6 +30,8 @@ export type DuelUpdate = {
 	aliveB: number,
 	suddenDeath: boolean,
 	forfeit: boolean,
+	-- Everyone in the duel, so clients can spectate teammates and label the kill feed.
+	roster: { { name: string, team: TeamId } },
 	countdownEndsAt: number?,
 	roundEndsAt: number?,
 	roundWinner: TeamId?,

@@ -14,7 +14,29 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 | P5 UI/UX | built, smoke-tested solo, **needs Mason navigation gate** | pending `v0.5.0` |
 | P6 Monetisation | built, receipt idempotency verified, **needs product ids + Studio test purchase** | pending `v0.6.0` |
 | P7 Analytics + release prep | built, events verified firing, **needs a published test session** | pending `v0.7.0` |
-| P8 Polish | built (sound, VFX, 3 arenas), **needs perf pass + bug bash with Mason's friends** | pending `v0.8.0` |
+| P8 Polish | done, gate passed | `v0.8.0` |
+| Live-ops pass 1 | built, smoke-tested solo, **D to test** | pending `v0.9.0` |
+
+**All eight roadmap phases passed their gates on 07/09/2026** (D's confirmation). Everything below the table is history plus the live-ops work that followed.
+
+## Live-ops pass 1 — built 07/09/2026
+
+- **Lobby pads for every mode**: `Pad_2v2` (green, x = +22), `Pad_3v3` (orange, x = −22), `Pad_4v4` (pink, x = +44) cloned from `Pad_1v1` in the place with their `TeamSize` attribute. Matchmaking registers all four.
+- **Kill feed** (top right, 5 lines, 6 s): sent only to the duel's participants; green when you got the kill, red when you were the victim, knife icon and HEADSHOT tag.
+- **Spectating**: dead in a live round (team modes) → third-person camera on a living teammate, else an opponent; "Spectating Name" in the notice line; back to first person on respawn. `DuelUpdate.roster` carries names and teams for this.
+- **Touch controls**: FIRE / RELOAD / SWAP / E / F buttons appear when `UserInputService.TouchEnabled`.
+- **Viewmodel animations**: reload dips and rolls for the reload duration; knife swing slashes an arc.
+
+### Verified solo via MCP
+
+Four pads registered; headshot + body shot killed the dummy and the kill feed showed `B3RZ3RK3R22 • TrainingDummy`; reload / swap / swing ran with the viewmodel intact and no client errors; three arenas rotate.
+
+### D to test (v0.9.0)
+
+1. 2v2: die first and confirm you spectate your teammate, then snap back to first person at the next round.
+2. Kill feed colours: green for your kills, red when killed.
+3. Reload and knife swing animations feel right (numbers in `client/Viewmodel.luau` `animOffset`).
+4. If you have a phone or tablet: Studio → Test → Device emulation, check the touch buttons don't cover the HUD.
 
 ## P8 Polish — built 07/09/2026
 

@@ -18,6 +18,8 @@ local OFFSETS: { [Types.WeaponId]: CFrame } = {
 local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 
+type Anim = { kind: "reload" | "swing", startedAt: number, duration: number }
+
 export type Viewmodel = typeof(setmetatable(
 	{} :: {
 		_model: Model?,
@@ -25,15 +27,43 @@ export type Viewmodel = typeof(setmetatable(
 		_skin: string?,
 		_kick: number,
 		_time: number,
+		_anim: Anim?,
 	},
 	Viewmodel
 ))
 
 function Viewmodel.new(): Viewmodel
 	return setmetatable(
-		{ _model = nil, _weapon = nil, _skin = nil, _kick = 0, _time = 0 },
+		{ _model = nil, _weapon = nil, _skin = nil, _kick = 0, _time = 0, _anim = nil },
 		Viewmodel
 	)
+end
+
+-- Procedural one-shot animations layered on the idle pose.
+local function animOffset(anim: Anim?): CFrame
+	if not anim then
+		return CFrame.new()
+	end
+	local t = math.clamp((os.clock() - anim.startedAt) / anim.duration, 0, 1)
+	local wave = math.sin(t * math.pi)
+	if anim.kind == "reload" then
+		-- Dip down and roll the cylinder side out, then back.
+		return CFrame.new(0, -0.45 * wave, 0.1 * wave) * CFrame.Angles(0, 0, math.rad(-55) * wave)
+	end
+	-- Swing: a quick slash arc from upper-right to lower-left.
+	local arc = math.sin(t * math.pi * 0.5)
+	return CFrame.new(-0.35 * arc, -0.15 * arc, -0.3 * wave)
+		* CFrame.Angles(math.rad(-50) * wave, math.rad(35) * arc, math.rad(20) * wave)
+end
+
+-- Dip-and-roll for `seconds` (the reload time).
+function Viewmodel.playReload(self: Viewmodel, seconds: number)
+	self._anim = { kind = "reload", startedAt = os.clock(), duration = seconds }
+end
+
+-- A slash arc for `seconds`.
+function Viewmodel.playSwing(self: Viewmodel, seconds: number)
+	self._anim = { kind = "swing", startedAt = os.clock(), duration = seconds }
 end
 
 -- Show `weapon` in `skin`, or hide everything with nil. Rebuilds only when something changed.
@@ -48,6 +78,7 @@ function Viewmodel.setWeapon(self: Viewmodel, weapon: Types.WeaponId?, skin: str
 	self._weapon = weapon
 	self._skin = skin
 	self._kick = 0
+	self._anim = nil
 	if weapon then
 		local model = WeaponModels.build(weapon, true, skin)
 		model.Name = "Viewmodel"
@@ -81,9 +112,15 @@ function Viewmodel.update(self: Viewmodel, dt: number, moving: boolean)
 	local bob = if moving
 		then math.sin(self._time * 9) * 0.03
 		else math.sin(self._time * 1.5) * 0.01
+	local anim = self._anim
+	if anim and os.clock() - anim.startedAt >= anim.duration then
+		self._anim = nil
+		anim = nil
+	end
 	local offset = OFFSETS[weapon]
 		* CFrame.new(0, bob, self._kick)
 		* CFrame.Angles(math.rad(self._kick * 25), 0, 0)
+		* animOffset(anim)
 	model:PivotTo(Workspace.CurrentCamera.CFrame * offset)
 end
 

@@ -105,9 +105,22 @@ local function aliveCharacter(player: Player): Model?
 	return character
 end
 
+-- Everyone in the attacker's duel (the attacker included), for kill-feed lines.
+local function duelAudience(attacker: Player): { Player }
+	local duelId = PlayerState.get(attacker).duelId
+	local audience = {}
+	for _, other in Players:GetPlayers() do
+		if other == attacker or (duelId ~= nil and PlayerState.get(other).duelId == duelId) then
+			table.insert(audience, other)
+		end
+	end
+	return audience
+end
+
 local function confirmHit(
 	attacker: Player,
 	model: Model,
+	weapon: WeaponId,
 	damage: number,
 	headshot: boolean,
 	killed: boolean
@@ -119,6 +132,11 @@ local function confirmHit(
 		killed = killed,
 	}
 	Net.fireClient(attacker, "HitConfirm", confirm)
+	if killed then
+		for _, viewer in duelAudience(attacker) do
+			Net.fireClient(viewer, "KillFeed", attacker.Name, model.Name, weapon, headshot)
+		end
+	end
 	Log.debug(
 		`Combat: {attacker.Name} hit {model.Name} for {damage}{if headshot
 			then " (headshot)"
@@ -240,7 +258,7 @@ local function onFire(
 		end
 		local damage = Weapons.Revolver.Damage * multiplier
 		local killed = applyDamage(victim, damage)
-		confirmHit(player, victim, damage, headshot, killed)
+		confirmHit(player, victim, "Revolver", damage, headshot, killed)
 	end
 	Net.fireAllClients("ShotFired", player, origin, hitPosition)
 end
@@ -297,7 +315,7 @@ local function onSwing(player: Player)
 		if model and not hit[model] and canDamage(player, model) then
 			hit[model] = true
 			local killed = applyDamage(model, Weapons.Knife.Damage)
-			confirmHit(player, model, Weapons.Knife.Damage, false, killed)
+			confirmHit(player, model, "Knife", Weapons.Knife.Damage, false, killed)
 		end
 	end
 end

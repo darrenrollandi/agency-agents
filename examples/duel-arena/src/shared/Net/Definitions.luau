@@ -183,6 +183,8 @@ local Definitions: { [string]: Definition } = {
 	-- AbilityUsed(user: Player, abilityId: string): every client plays the VFX; the owner applies
 	-- client-side movement (Dash). Reliable because the owner depends on it.
 	AbilityUsed = { kind = "Event", direction = "ServerToClient" },
+	-- KillFeed(attackerName: string, victimName: string, weapon: string, headshot: boolean) to the duel.
+	KillFeed = { kind = "Event", direction = "ServerToClient" },
 	-- ShotFired(shooter: Player, origin: Vector3, hitPosition: Vector3): cosmetic tracers for others.
 	ShotFired = { kind = "Unreliable", direction = "ServerToClient" },
 }

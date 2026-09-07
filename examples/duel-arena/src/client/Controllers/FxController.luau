@@ -8,10 +8,14 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Trove = require(Shared.Util.Trove)
+local Net = require(Shared.Net.Net)
 local Hud = require(script.Parent.Parent.Hud)
 local SoundController = require(script.Parent.Parent.SoundController)
 
 local HURT_COOLDOWN = 0.25
+local KILL_FEED_LINES = 5
+local KILL_FEED_SECONDS = 6
+local KILL_FEED_LINE_HEIGHT = 26
 
 local player = Players.LocalPlayer
 
@@ -19,6 +23,8 @@ local FxController = {}
 
 local announceLabel: TextLabel
 local damageFlash: Frame
+local killFeed: Frame
+local killLines: { TextLabel } = {}
 local announceToken = 0
 local lastHurtAt = 0
 local characterTroves: { [Player]: Trove.Trove } = {}
@@ -114,6 +120,53 @@ local function watchPlayer(who: Player)
 	end
 end
 
+local function layoutKillFeed()
+	for index, line in killLines do
+		line.Position = UDim2.fromOffset(0, (index - 1) * KILL_FEED_LINE_HEIGHT)
+	end
+end
+
+-- One kill-feed line, newest at the bottom, oldest dropped past five or after a few seconds.
+local function addKillLine(
+	attackerName: string,
+	victimName: string,
+	weapon: string,
+	headshot: boolean
+)
+	local line = Instance.new("TextLabel")
+	line.Size = UDim2.new(1, 0, 0, KILL_FEED_LINE_HEIGHT)
+	line.BackgroundTransparency = 1
+	line.Font = Enum.Font.GothamBold
+	line.TextSize = 18
+	line.TextXAlignment = Enum.TextXAlignment.Right
+	line.TextStrokeTransparency = 0.4
+	local icon = if weapon == "Knife" then "🔪" else "•"
+	local mine = attackerName == player.Name
+	local victimMine = victimName == player.Name
+	line.TextColor3 = if mine
+		then Color3.fromRGB(120, 220, 140)
+		elseif victimMine then Color3.fromRGB(240, 100, 100)
+		else Color3.fromRGB(220, 220, 220)
+	line.Text = `{attackerName}  {icon}{if headshot then " HEADSHOT" else ""}  {victimName}`
+	line.Parent = killFeed
+	table.insert(killLines, line)
+	while #killLines > KILL_FEED_LINES do
+		local oldest = table.remove(killLines, 1)
+		if oldest then
+			oldest:Destroy()
+		end
+	end
+	layoutKillFeed()
+	task.delay(KILL_FEED_SECONDS, function()
+		local index = table.find(killLines, line)
+		if index then
+			table.remove(killLines, index)
+			line:Destroy()
+			layoutKillFeed()
+		end
+	end)
+end
+
 -- Big centre-screen text that fades after `seconds`.
 function FxController.announce(text: string, color: Color3, seconds: number)
 	announceToken += 1
@@ -136,6 +189,8 @@ end
 function FxController.start()
 	announceLabel = Hud.element("AnnounceLabel") :: TextLabel
 	damageFlash = Hud.element("DamageFlash") :: Frame
+	killFeed = Hud.element("KillFeed") :: Frame
+	Net.onClient("KillFeed", addKillLine)
 
 	Players.PlayerAdded:Connect(watchPlayer)
 	for _, who in Players:GetPlayers() do

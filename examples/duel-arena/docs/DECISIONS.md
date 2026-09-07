@@ -157,3 +157,7 @@ Place settings, the maturity-questionnaire draft (target Mild, no blood, fixed-p
 ## 07/09/2026 — Feedback effects stay bloodless and cheap
 
 Death = grey-white particle poof plus a sound; damage = a 0.35 s red screen tint plus a grunt (throttled); round beats = centre announcements (3-2-1, FIGHT!, ROUND WON/LOST, SUDDEN DEATH). All client-only, self-destroying instances under the Camera, no server cost. The maturity target (Mild) forbids blood, so any future VFX must keep this palette.
+
+## 07/09/2026 — Post-roadmap live-ops pass (v0.9 work)
+
+Added once every gate had passed: lobby pads for 2v2, 3v3 and 4v4 (Studio clones of Pad_1v1 with their own `TeamSize`), a kill feed sent only to the duel's participants, spectating a living teammate (else an opponent) in third person while dead in a live round, touch buttons on every gameplay action when `UserInputService.TouchEnabled`, and procedural reload / swing animations layered onto the viewmodel. `DuelUpdate` now carries the roster so clients know who is in the duel without another remote. Rejected: a spectator remote (the roster suffices), a global kill feed (noise in the lobby).

@@ -237,6 +237,15 @@ function HudLayout.build(): ScreenGui
 	)
 	announce.TextTransparency = 1
 
+	-- Kill feed: FxController fills this with up to five lines, newest at the bottom.
+	local killFeed = Instance.new("Frame")
+	killFeed.Name = "KillFeed"
+	killFeed.AnchorPoint = Vector2.new(1, 0)
+	killFeed.Position = UDim2.new(1, -24, 0, 120)
+	killFeed.Size = UDim2.fromOffset(360, 140)
+	killFeed.BackgroundTransparency = 1
+	killFeed.Parent = gui
+
 	-- Lobby: level line and the three things you can do. Shown only outside a duel.
 	local lobby = Instance.new("Frame")
 	lobby.Name = "LobbyPanel"

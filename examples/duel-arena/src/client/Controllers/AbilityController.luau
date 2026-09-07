@@ -6,6 +6,7 @@ local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -84,20 +85,27 @@ local function bind()
 		return
 	end
 	bound = true
+	local touch = UserInputService.TouchEnabled
 	ContextActionService:BindAction(
 		ACTION_ABILITY_1,
 		onAction,
-		false,
+		touch,
 		Enum.KeyCode.E,
 		Enum.KeyCode.ButtonL1
 	)
 	ContextActionService:BindAction(
 		ACTION_ABILITY_2,
 		onAction,
-		false,
+		touch,
 		Enum.KeyCode.F,
 		Enum.KeyCode.ButtonR1
 	)
+	if touch then
+		ContextActionService:SetTitle(ACTION_ABILITY_1, "E")
+		ContextActionService:SetPosition(ACTION_ABILITY_1, UDim2.new(1, -270, 1, -160))
+		ContextActionService:SetTitle(ACTION_ABILITY_2, "F")
+		ContextActionService:SetPosition(ACTION_ABILITY_2, UDim2.new(1, -110, 1, -240))
+	end
 end
 
 local function unbind()

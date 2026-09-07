@@ -86,6 +86,10 @@ end
 
 local function broadcast(duel: Duel)
 	local aliveA, aliveB = aliveCount(duel, "A"), aliveCount(duel, "B")
+	local roster: { { name: string, team: TeamId } } = {}
+	eachPlayer(duel, function(member, memberTeam)
+		table.insert(roster, { name = member.Name, team = memberTeam })
+	end)
 	eachPlayer(duel, function(player, team)
 		local update: Types.DuelUpdate = {
 			duelId = duel.id,
@@ -99,6 +103,7 @@ local function broadcast(duel: Duel)
 			aliveB = aliveB,
 			suddenDeath = duel.suddenDeath,
 			forfeit = duel.forfeit,
+			roster = roster,
 			countdownEndsAt = duel.countdownEndsAt,
 			roundEndsAt = duel.roundEndsAt,
 			roundWinner = duel.roundWinner,
