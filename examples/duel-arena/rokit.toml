@@ -1,0 +1,9 @@
+# Toolchain pins. Versions were pinned from crates.io on 07/09/2026 because the
+# bootstrap environment could not reach GitHub releases. On first use run:
+#   rokit install
+#   rokit add JohnnyMorganz/luau-lsp      # not pinned here: not published on crates.io
+# and commit the updated file.
+[tools]
+rojo = "rojo-rbx/rojo@7.7.0"
+stylua = "JohnnyMorganz/StyLua@2.5.2"
+selene = "Kampfkarren/selene@0.31.0"
