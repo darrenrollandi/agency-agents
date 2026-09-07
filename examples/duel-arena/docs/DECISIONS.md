@@ -161,3 +161,11 @@ Death = grey-white particle poof plus a sound; damage = a 0.35 s red screen tint
 ## 07/09/2026 — Post-roadmap live-ops pass (v0.9 work)
 
 Added once every gate had passed: lobby pads for 2v2, 3v3 and 4v4 (Studio clones of Pad_1v1 with their own `TeamSize`), a kill feed sent only to the duel's participants, spectating a living teammate (else an opponent) in third person while dead in a live round, touch buttons on every gameplay action when `UserInputService.TouchEnabled`, and procedural reload / swing animations layered onto the viewmodel. `DuelUpdate` now carries the roster so clients know who is in the duel without another remote. Rejected: a spectator remote (the roster suffices), a global kill feed (noise in the lobby).
+
+## 07/09/2026 — Anticheat starts as log-only
+
+`AntiCheatService` samples each armed player's horizontal travel every 0.5 s against WalkSpeed × 1.6 (plus a Dash allowance when the Dash cooldown attribute shows a recent use) and counts flags with one `[WARN]` per player. It never kicks or teleports. Enforcement is a later decision with D once real players have produced flag data; false positives on a kids' PvP game cost more than a speedhacker in a private duel. Verified: a legitimate Dash (22 studs) does not flag, a 60-stud teleport does.
+
+## 07/09/2026 — Teammate outlines are client-side Highlights
+
+In team modes each client outlines its own teammates (roster from DuelUpdate) with a `Highlight` in the team colour, `AlwaysOnTop` so they read through walls. Nothing is added server-side, so opponents never receive an outline of you. Rejected: server-added highlights (replicate to everyone = wallhack).

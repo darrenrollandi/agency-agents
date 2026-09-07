@@ -2,6 +2,19 @@
 
 A fast-paced first-person Roblox dueling game: 1v1 to 4v4, revolver and knife, first team to 5 rounds wins. Server-authoritative Luau, synced into Studio with Rojo, developed from this repo. Read [`CLAUDE.md`](CLAUDE.md) for the full handover and [`docs/STATUS.md`](docs/STATUS.md) for where things stand.
 
+## Controls
+
+| Action | Keyboard / mouse | Gamepad |
+|---|---|---|
+| Fire / knife swing | Left click | R2 |
+| Reload | R | X |
+| Revolver / Knife | 1 / 2, Q toggles | Y |
+| Ability 1 / 2 | E / F | L1 / R1 |
+| Locker (lobby) | L | Select |
+| Settings | Tab | Start |
+
+Touch devices get on-screen buttons for all of the above. Stand on a coloured pad to queue; step off to leave.
+
 ## Setup
 
 ```bash

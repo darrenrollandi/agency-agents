@@ -23,6 +23,7 @@ local DuelService = require(script.Parent.Services.DuelService)
 local DataService = require(script.Parent.Services.DataService)
 local ProgressionService = require(script.Parent.Services.ProgressionService)
 local MonetisationService = require(script.Parent.Services.MonetisationService)
+local AntiCheatService = require(script.Parent.Services.AntiCheatService)
 
 local DebugCommands = {}
 
@@ -93,6 +94,9 @@ local commands: { [string]: (...any) -> any } = {
 	end,
 	strikes = function(name: string)
 		return Net.getStrikes(playersNamed({ name })[1])
+	end,
+	flags = function(name: string)
+		return AntiCheatService.getFlags(playersNamed({ name })[1])
 	end,
 	dummy = function(name: string, distance: number?)
 		local player = playersNamed({ name })[1]

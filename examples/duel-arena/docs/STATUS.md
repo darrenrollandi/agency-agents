@@ -31,9 +31,16 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 
 Four pads registered; headshot + body shot killed the dummy and the kill feed showed `B3RZ3RK3R22 • TrainingDummy`; reload / swap / swing ran with the viewmodel intact and no client errors; three arenas rotate.
 
+## Live-ops pass 2 — built 07/09/2026
+
+- **Teammate outlines** (`TeamHighlightController`): in 2v2+ your teammates get a team-coloured outline visible through walls. Client-side only, so opponents never see yours.
+- **AntiCheat, log-only** (`AntiCheatService`): flags impossible horizontal movement (WalkSpeed × 1.6, Dash-aware) with one `[WARN]` per player; `DebugCommands` `flags`. No enforcement yet by design (see DECISIONS).
+- README gained a controls table. Verified solo: legitimate Dash → 0 flags, 60-stud teleport → 1 flag with the warning; no self-highlight; 37 tests pass.
+
 ### D to test (v0.9.0)
 
-1. 2v2: die first and confirm you spectate your teammate, then snap back to first person at the next round.
+1. 2v2: die first and confirm you spectate your teammate, then snap back to first person at the next round. Your teammate should have a blue/orange outline.
+0. After a few real duels, check the server Output for `AntiCheat:` warnings; any on honest players means the tolerance needs raising before enforcement is ever considered.
 2. Kill feed colours: green for your kills, red when killed.
 3. Reload and knife swing animations feel right (numbers in `client/Viewmodel.luau` `animOffset`).
 4. If you have a phone or tablet: Studio → Test → Device emulation, check the touch buttons don't cover the HUD.
