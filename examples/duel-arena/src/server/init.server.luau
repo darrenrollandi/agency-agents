@@ -10,6 +10,7 @@ local Net = require(Shared.Net.Net)
 local Log = require(Shared.Util.Log)
 local PlayerState = require(script.PlayerState)
 local DataService = require(script.Services.DataService)
+local AnalyticsService = require(script.Services.AnalyticsService)
 local ProgressionService = require(script.Services.ProgressionService)
 local MonetisationService = require(script.Services.MonetisationService)
 local CharacterService = require(script.Services.CharacterService)
@@ -21,6 +22,7 @@ local DebugCommands = require(script.DebugCommands)
 
 Net.init()
 DataService.start()
+AnalyticsService.start()
 ProgressionService.start()
 MonetisationService.start()
 CharacterService.start()
@@ -34,6 +36,6 @@ DebugCommands.start()
 Players.PlayerRemoving:Connect(PlayerState.clear)
 
 Log.info(
-	"Services started: Data, Progression, Monetisation, Character, Combat, Ability, Duel, Matchmaking"
+	"Services started: Data, Analytics, Progression, Monetisation, Character, Combat, Ability, Duel, Matchmaking"
 )
 print("[Server] Duel Arena booted")

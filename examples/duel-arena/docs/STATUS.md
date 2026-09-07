@@ -13,8 +13,23 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 | P4 Progression + data | built, smoke-tested solo, **needs rejoin + session-lock gate** | pending `v0.4.0` |
 | P5 UI/UX | built, smoke-tested solo, **needs Mason navigation gate** | pending `v0.5.0` |
 | P6 Monetisation | built, receipt idempotency verified, **needs product ids + Studio test purchase** | pending `v0.6.0` |
-| P7 Analytics + release prep | in progress | |
-| P8 Polish | not started | |
+| P7 Analytics + release prep | built, events verified firing, **needs a published test session** | pending `v0.7.0` |
+| P8 Polish | in progress | |
+
+## P7 Analytics + release prep — built 07/09/2026
+
+- `Shared/Config/Analytics.luau`: enabled flag, funnel step names (Joined, SteppedOnPad, FirstDuel, FirstWin), progression path `Level`, currency names.
+- `AnalyticsService`: pcall-guarded wrapper; `funnel` (deduplicated per profile in `Profile.Data.Funnel`), `xpEarned` (economy source, sku DuelWin/DuelLoss), `levelReached` (progression complete), `boostPurchased` (economy IAP), `custom` (DuelWon / DuelLost with rounds won). Hooked in DataService load, Matchmaking join, DuelService start, ProgressionService rewards, MonetisationService grants.
+- `docs/RELEASE_CHECKLIST.md`: place settings, maturity questionnaire draft (target **Mild**), data / monetisation / analytics / performance checks, go-public steps, post-launch watch items.
+- Tests: `Analytics.spec` (35 cases, all pass inside Play).
+
+### Verified solo via MCP
+
+Console shows `AnalyticsService: … event fired` for funnel steps 1, 3, 4, an economy event for the boost, and progression + economy + custom events per duel. A second win did not re-record any funnel step. No `not recorded` lines.
+
+### P7 gate (CLAUDE.md §7): D can see funnel data in Creator Hub after a test session; questionnaire drafted
+
+Analytics only reaches Creator Hub from a published experience. Publish privately, play through join → pad → duel → win, then check Creator Hub → Analytics → Funnel / Economy / Progression per `docs/RELEASE_CHECKLIST.md` §5. Review the questionnaire draft in §2 of the checklist against the live form.
 
 ## P6 Monetisation — built 07/09/2026
 

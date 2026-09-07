@@ -16,6 +16,7 @@ local Log = require(Shared.Util.Log)
 local PurchaseLedger = require(Shared.Util.PurchaseLedger)
 local DataService = require(script.Parent.DataService)
 local ProgressionService = require(script.Parent.ProgressionService)
+local AnalyticsService = require(script.Parent.AnalyticsService)
 
 export type ReceiptInfo = {
 	PlayerId: number,
@@ -126,6 +127,11 @@ function MonetisationService.start()
 		local now = os.time()
 		local from = math.max(now, profile.Data.XPBoostUntil)
 		profile.Data.XPBoostUntil = from + boost.minutes * 60
+		AnalyticsService.boostPurchased(
+			_player,
+			boost.minutes,
+			math.ceil((profile.Data.XPBoostUntil - now) / 60)
+		)
 		return true
 	end
 	if Monetisation.isConfigured(boost.id) then

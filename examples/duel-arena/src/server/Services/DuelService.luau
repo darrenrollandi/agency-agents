@@ -18,6 +18,7 @@ local CharacterService = require(script.Parent.CharacterService)
 local CombatService = require(script.Parent.CombatService)
 local AbilityService = require(script.Parent.AbilityService)
 local ProgressionService = require(script.Parent.ProgressionService)
+local AnalyticsService = require(script.Parent.AnalyticsService)
 
 type TeamId = Types.TeamId
 type DuelState = Types.DuelState
@@ -340,6 +341,9 @@ function DuelService.startDuel(mode: Types.TeamMode, teamA: { Player }, teamB: {
 		state.team = team
 	end)
 	Log.info(`[Duel {id}] {mode}: A [{names(teamA)}] vs B [{names(teamB)}] in {arena.model.Name}`)
+	eachPlayer(duel, function(player)
+		AnalyticsService.funnel(player, "FirstDuel")
+	end)
 	transition(duel, "Countdown")
 	return id
 end

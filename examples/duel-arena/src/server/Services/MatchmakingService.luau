@@ -17,6 +17,7 @@ local Log = require(Shared.Util.Log)
 local PlayerState = require(script.Parent.Parent.PlayerState)
 local DuelService = require(script.Parent.DuelService)
 local ProgressionService = require(script.Parent.ProgressionService)
+local AnalyticsService = require(script.Parent.AnalyticsService)
 
 local SCAN_INTERVAL = 0.2
 local PAD_HEIGHT = 8
@@ -84,6 +85,7 @@ local function joinQueue(pad: Pad, player: Player)
 	table.insert(pad.queue, player)
 	state.queuePad = pad.name
 	Log.debug(`Matchmaking: {player.Name} queued on {pad.name} ({#pad.queue}/{needed(pad)})`)
+	AnalyticsService.funnel(player, "SteppedOnPad")
 	publish(pad)
 end
 

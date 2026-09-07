@@ -13,6 +13,7 @@ local Net = require(Shared.Net.Net)
 local Log = require(Shared.Util.Log)
 local DataService = require(script.Parent.DataService)
 local CombatService = require(script.Parent.CombatService)
+local AnalyticsService = require(script.Parent.AnalyticsService)
 
 export type DuelResult = {
 	player: Player,
@@ -134,6 +135,9 @@ function ProgressionService.addXP(player: Player, amount: number): Types.DuelRew
 	publish(player, profile)
 	if after > before then
 		Log.info(`Progression: {player.Name} reached level {after}`)
+		for level = before + 1, after do
+			AnalyticsService.levelReached(player, level)
+		end
 	end
 	return {
 		won = false,
@@ -170,6 +174,20 @@ function ProgressionService.recordDuel(results: { DuelResult })
 			reward.won = result.won
 			reward.boosted = boosted
 			Net.fireClient(player, "DuelReward", reward)
+		end
+		AnalyticsService.xpEarned(
+			player,
+			gained,
+			profile.Data.XP,
+			if result.won then "DuelWin" else "DuelLoss"
+		)
+		AnalyticsService.custom(
+			player,
+			if result.won then "DuelWon" else "DuelLost",
+			result.roundsWon
+		)
+		if result.won then
+			AnalyticsService.funnel(player, "FirstWin")
 		end
 	end
 end
