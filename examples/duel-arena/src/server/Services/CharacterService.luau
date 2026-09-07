@@ -35,7 +35,16 @@ local function loadCharacter(player: Player): Model?
 		Log.warn(`CharacterService: LoadCharacter failed for {player.Name}: {err}`)
 		return nil
 	end
-	return player.Character
+	local character = player.Character
+	if character then
+		-- Roblox injects a "Health" script that regenerates 1% per second. Duels have no passive regen;
+		-- healing is an ability (Second Wind).
+		local regen = character:FindFirstChild("Health")
+		if regen and regen:IsA("Script") then
+			regen:Destroy()
+		end
+	end
+	return character
 end
 
 local function hookLobbyDeath(player: Player, character: Model)

@@ -16,6 +16,7 @@ local PlayerState = require(script.Parent.Parent.PlayerState)
 local Arena = require(script.Parent.Parent.Arena)
 local CharacterService = require(script.Parent.CharacterService)
 local CombatService = require(script.Parent.CombatService)
+local AbilityService = require(script.Parent.AbilityService)
 
 type TeamId = Types.TeamId
 type DuelState = Types.DuelState
@@ -146,6 +147,7 @@ local function onDeath(duel: Duel, player: Player, character: Model?)
 		return
 	end
 	duel.alive[player] = false
+	AbilityService.disarm(player)
 	CombatService.disarm(player)
 	if character then
 		-- Readable, not gory: the body lies for a moment, then goes.
@@ -172,6 +174,7 @@ end
 
 local function disarmAll(duel: Duel)
 	eachPlayer(duel, function(player)
+		AbilityService.disarm(player)
 		CombatService.disarm(player)
 	end)
 end
@@ -219,6 +222,7 @@ handlers.Live = function(duel)
 		if character and duel.alive[player] then
 			CharacterService.setFrozen(character, false)
 			CombatService.arm(player)
+			AbilityService.arm(player)
 		end
 	end)
 	duel.roundEndsAt = now() + Rounds.RoundTimeSeconds

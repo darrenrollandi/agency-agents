@@ -62,6 +62,15 @@ local function validateEquip(...: any): boolean
 	return weapon == "Revolver" or weapon == "Knife"
 end
 
+-- UseAbility(slot: 1 | 2)
+local function validateUseAbility(...: any): boolean
+	if select("#", ...) ~= 1 then
+		return false
+	end
+	local slot = ...
+	return slot == 1 or slot == 2
+end
+
 local Definitions: { [string]: Definition } = {
 	-- Lobby: Types.QueueStatus, or nil when the player leaves a queue.
 	QueueStatus = { kind = "Event", direction = "ServerToClient" },
@@ -96,9 +105,19 @@ local Definitions: { [string]: Definition } = {
 		validate = validateEquip,
 	},
 
+	UseAbility = {
+		kind = "Event",
+		direction = "ClientToServer",
+		ratePerSecond = 4,
+		validate = validateUseAbility,
+	},
+
 	-- Combat, server → client.
 	-- HitConfirm(Types.HitConfirm) to the attacker after an accepted hit.
 	HitConfirm = { kind = "Event", direction = "ServerToClient" },
+	-- AbilityUsed(user: Player, abilityId: string): every client plays the VFX; the owner applies
+	-- client-side movement (Dash). Reliable because the owner depends on it.
+	AbilityUsed = { kind = "Event", direction = "ServerToClient" },
 	-- ShotFired(shooter: Player, origin: Vector3, hitPosition: Vector3): cosmetic tracers for others.
 	ShotFired = { kind = "Unreliable", direction = "ServerToClient" },
 }

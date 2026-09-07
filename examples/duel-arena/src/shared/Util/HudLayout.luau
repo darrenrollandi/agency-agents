@@ -107,6 +107,28 @@ function HudLayout.build(): ScreenGui
 		Enum.TextXAlignment.Right
 	)
 
+	-- Bottom centre: the two ability slots for the weapon in hand.
+	label(
+		gui,
+		"Ability1Label",
+		Vector2.new(0.5, 1),
+		UDim2.new(0.5, 0, 1, -56),
+		UDim2.fromOffset(420, 24),
+		20,
+		Color3.fromRGB(220, 220, 220),
+		center
+	)
+	label(
+		gui,
+		"Ability2Label",
+		Vector2.new(0.5, 1),
+		UDim2.new(0.5, 0, 1, -28),
+		UDim2.fromOffset(420, 24),
+		20,
+		Color3.fromRGB(220, 220, 220),
+		center
+	)
+
 	-- Centre: crosshair dot and hit marker.
 	local crosshair = Instance.new("Frame")
 	crosshair.Name = "Crosshair"

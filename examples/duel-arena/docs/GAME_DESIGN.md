@@ -63,17 +63,24 @@ Controls: left click fires or swings, R reloads, 1 / 2 select, Q toggles. Gamepa
 
 Each weapon has its own set of cooldown-based abilities. The framework is generic; the list is not fixed until D confirms.
 
-- **TBD:** how many per weapon (assume 2–3)?
-- **TBD:** picked before a duel as a loadout, or fixed for everyone?
-- Design session with Mason: brainstorm 6–8 per weapon, pick the 2 that make the best "I outplayed you" moments.
+- **Default chosen 07/09/2026 (D and Mason to confirm):** two per weapon, fixed for everyone, keyed to the weapon in hand. Ability1 = E / L1, Ability2 = F / R1. Cooldowns reset every round. Definitions live in `src/shared/Config/Abilities.luau`; changing a number there is the whole change.
+- Design session with Mason: brainstorm 6–8 per weapon, keep or replace the four below. Loadout picking (choose 2 of N before a duel) is supported by the data model later.
 
-### Revolver abilities (candidates)
+### Revolver abilities (defaults)
 
-_Empty until the design session._
+| Key | Ability | Effect | Cooldown |
+|---|---|---|---|
+| E | Speed Loader | Instantly refill the cylinder (no effect if already full) | 12 s |
+| F | Dead Eye | Next shot within 4 s deals ×2 (70 body, 140 head). Crosshair turns gold. Spent even on a miss. | 15 s |
 
-### Knife abilities (candidates)
+### Knife abilities (defaults)
 
-_Empty until the design session._
+| Key | Ability | Effect | Cooldown |
+|---|---|---|---|
+| E | Dash | Burst forward at 70 studs/s for 0.18 s (about 12 studs) in the camera's direction | 6 s |
+| F | Second Wind | Recover 40 HP over 2 s (no effect at full health) | 18 s |
+
+No passive health regeneration: Roblox's default regen script is removed on spawn, so healing only comes from Second Wind.
 
 ## Progression
 
@@ -120,7 +127,7 @@ Mirrors CLAUDE.md §10. Strike each one out here as it's answered and move the a
 1. Working title.
 2. ~~Team sizes at launch~~ — default 1v1 first (see Team sizes). Confirm.
 3. ~~Round timer / sudden death~~ — default 90 s, tie → sudden death (see Round rules). Confirm.
-4. Abilities: count and loadout vs fixed.
+4. ~~Abilities: count and loadout vs fixed~~ — default two per weapon, fixed (see Abilities). Design session still worth having.
 5. Progression currency.
 6. ~~Revolver and knife numbers~~ — defaults in the Weapons tables. Tune after Mason's first P2 session.
 7. ~~Friendly fire~~ — default off. Confirm.

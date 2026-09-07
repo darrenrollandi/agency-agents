@@ -24,6 +24,9 @@ type Loadout = {
 	reloadToken: number,
 	lastFireAt: number,
 	lastSwingAt: number,
+	-- Dead Eye: the next shot before empowerUntil (os.clock) is multiplied.
+	empowerMultiplier: number,
+	empowerUntil: number,
 }
 
 local WORLD_MODEL_NAME = "WorldWeapon"
@@ -41,10 +44,12 @@ local function publish(player: Player, loadout: Loadout?)
 		player:SetAttribute("Weapon", loadout.weapon)
 		player:SetAttribute("Ammo", loadout.ammo)
 		player:SetAttribute("Reloading", loadout.reloading)
+		player:SetAttribute("Empowered", loadout.empowerUntil > os.clock())
 	else
 		player:SetAttribute("Weapon", nil)
 		player:SetAttribute("Ammo", nil)
 		player:SetAttribute("Reloading", nil)
+		player:SetAttribute("Empowered", nil)
 	end
 end
 
@@ -219,8 +224,18 @@ local function onFire(
 		end
 	end
 
+	-- Dead Eye is spent by the shot whether or not it lands.
+	local empowered = loadout.empowerUntil > now
+	if empowered then
+		loadout.empowerUntil = 0
+		publish(player, loadout)
+	end
+
 	if victim and canDamage(player, victim) then
 		local multiplier = if headshot then Weapons.Revolver.HeadshotMultiplier else 1
+		if empowered then
+			multiplier *= loadout.empowerMultiplier
+		end
 		local damage = Weapons.Revolver.Damage * multiplier
 		local killed = applyDamage(victim, damage)
 		confirmHit(player, victim, damage, headshot, killed)
@@ -309,10 +324,51 @@ function CombatService.arm(player: Player)
 		reloadToken = 0,
 		lastFireAt = 0,
 		lastSwingAt = 0,
+		empowerMultiplier = 1,
+		empowerUntil = 0,
 	}
 	loadouts[player] = loadout
 	publish(player, loadout)
 	attachWorldModel(player, "Revolver")
+end
+
+-- The weapon in hand, or nil when disarmed.
+function CombatService.currentWeapon(player: Player): WeaponId?
+	local loadout = loadouts[player]
+	return if loadout then loadout.weapon else nil
+end
+
+-- Speed Loader: instant full cylinder. False if there was nothing to reload.
+function CombatService.refill(player: Player): boolean
+	local loadout = loadouts[player]
+	if not loadout or loadout.weapon ~= "Revolver" then
+		return false
+	end
+	if loadout.ammo >= Weapons.Revolver.Cylinder and not loadout.reloading then
+		return false
+	end
+	loadout.reloading = false
+	loadout.reloadToken += 1
+	loadout.ammo = Weapons.Revolver.Cylinder
+	publish(player, loadout)
+	return true
+end
+
+-- Dead Eye: the next revolver shot fired within `seconds` deals `multiplier` × damage.
+function CombatService.empowerNextShot(player: Player, multiplier: number, seconds: number): boolean
+	local loadout = loadouts[player]
+	if not loadout or loadout.weapon ~= "Revolver" then
+		return false
+	end
+	loadout.empowerMultiplier = multiplier
+	loadout.empowerUntil = os.clock() + seconds
+	publish(player, loadout)
+	task.delay(seconds, function()
+		if loadouts[player] == loadout and loadout.empowerUntil <= os.clock() then
+			publish(player, loadout)
+		end
+	end)
+	return true
 end
 
 -- Take everything away (round over, death, leave).

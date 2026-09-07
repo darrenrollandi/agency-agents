@@ -33,6 +33,13 @@ local function renderWeapon()
 		return
 	end
 	crosshair.Visible = true
+	-- Dead Eye armed: the crosshair goes gold until the shot is spent.
+	crosshair.BackgroundColor3 = if player:GetAttribute("Empowered") == true
+		then Color3.fromRGB(255, 210, 60)
+		else Color3.new(1, 1, 1)
+	crosshair.Size = if player:GetAttribute("Empowered") == true
+		then UDim2.fromOffset(8, 8)
+		else UDim2.fromOffset(4, 4)
 	weaponLabel.Text = string.upper(weapon)
 	if weapon == "Revolver" then
 		local ammo = player:GetAttribute("Ammo")
@@ -95,7 +102,7 @@ function HudController.start()
 	crosshair = Hud.element("Crosshair")
 	hitMarker = Hud.element("HitMarker") :: TextLabel
 
-	for _, attribute in { "Weapon", "Ammo", "Reloading" } do
+	for _, attribute in { "Weapon", "Ammo", "Reloading", "Empowered" } do
 		player:GetAttributeChangedSignal(attribute):Connect(renderWeapon)
 	end
 	player.CharacterAdded:Connect(bindCharacter)

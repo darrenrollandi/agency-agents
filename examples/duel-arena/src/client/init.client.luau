@@ -4,11 +4,13 @@
 local CameraController = require(script.Controllers.CameraController)
 local HudController = require(script.Controllers.HudController)
 local WeaponController = require(script.Controllers.WeaponController)
+local AbilityController = require(script.Controllers.AbilityController)
 local LobbyController = require(script.Controllers.LobbyController)
 
 CameraController.start()
 HudController.start()
 WeaponController.start()
+AbilityController.start()
 LobbyController.start()
 
 print("[Client] Duel Arena client booted")

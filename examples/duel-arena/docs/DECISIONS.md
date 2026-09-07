@@ -105,3 +105,7 @@ Revolver: 6 rounds, 35 body, ×2 head (70), 0.4 s between shots, 1.6 s reload, 4
 ## 07/09/2026 — Edit-mode `require` is cached: setup snippets require clones
 
 In the Edit DataModel, `require(ModuleScript)` from the command bar or MCP is cached across runs, so a setup snippet that rebuilt the HUD after a code change produced the old layout. Requiring a *clone* of the module forces a fresh load of the current Source. Every setup snippet in STATUS.md now does this. Rejected: restarting Studio to clear the cache.
+
+## 07/09/2026 — Abilities: fixed loadout of two per weapon, data-driven, server-executed
+
+`Shared/Config/Abilities.luau` is the only place an ability is defined (id, weapon, slot, cooldown, params). `AbilityService` owns cooldowns (reset every round, published as `Cooldown_<Id>` attributes holding a server timestamp) and runs every effect that touches state through CombatService or the Humanoid. The client sends only `UseAbility(slot)`; `AbilityUsed` fans out for VFX. Dash is the one exception: the owning client applies a short LinearVelocity burst because it owns its character's physics anyway; the server still gates the cooldown. Defaults: Speed Loader (instant reload, 12 s), Dead Eye (next shot ×2 within 4 s, 15 s), Dash (70 studs/s for 0.18 s, 6 s), Second Wind (+40 HP over 2 s, 18 s). Rejected: per-player loadout picking (an open design question; the data model supports it later by mapping slots per player instead of per weapon); client-computed cooldowns (spoofable).
