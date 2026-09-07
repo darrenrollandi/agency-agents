@@ -110,8 +110,10 @@ Skins are palettes on the same blocky geometry for now; real meshes come with th
 
 Cosmetic only plus optional convenience. No pay-to-win.
 
-- Skin game passes.
-- One dev product (XP boost) as the first test of `ProcessReceipt`.
+- **Game passes** (one each): *Void* revolver skin, *Void* knife skin. Granted on join if owned, or straight after purchase. Bought from the Locker row ("BUY (Robux)").
+- **Developer product**: *XP Boost ×2 (30 min)*. Purchases stack (each adds 30 minutes). Shown as a row at the bottom of the Locker; "ACTIVE · N min left" while running. The results screen marks boosted rewards "(×2 boost)".
+- Ids live in `src/shared/Config/Monetisation.luau`; D creates the products on the Creator Dashboard and pastes the ids. Until then every price row reads "Coming soon" and the boost row is hidden.
+- Prices: **TBD** (D sets them on the dashboard; suggest 99 Robux per skin, 49 for the boost, to be revisited with real data).
 
 ## Content maturity
 

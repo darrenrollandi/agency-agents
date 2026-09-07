@@ -14,9 +14,9 @@ export type SkinDef = {
 	id: string,
 	weapon: Types.WeaponId,
 	name: string,
-	-- Exactly one of these applies. Neither = default skin, always owned.
+	-- Exactly one of these applies. Neither = default skin, always owned. Game-pass ids live in Config/Monetisation.
 	unlockLevel: number?,
-	gamePassId: number?,
+	gamePass: boolean?,
 	palette: Palette,
 }
 
@@ -71,7 +71,7 @@ local Defs: { SkinDef } = {
 		id = "RevolverVoid",
 		weapon = "Revolver",
 		name = "Void",
-		gamePassId = 0,
+		gamePass = true,
 		palette = {
 			Grip = Color3.fromRGB(10, 10, 14),
 			Body = Color3.fromRGB(40, 20, 70),
@@ -126,7 +126,7 @@ local Defs: { SkinDef } = {
 		id = "KnifeVoid",
 		weapon = "Knife",
 		name = "Void",
-		gamePassId = 0,
+		gamePass = true,
 		palette = {
 			Grip = Color3.fromRGB(10, 10, 14),
 			Body = Color3.fromRGB(150, 80, 255),
@@ -163,7 +163,7 @@ function Skins.defaultFor(weapon: Types.WeaponId): string
 end
 
 function Skins.isDefault(def: SkinDef): boolean
-	return def.unlockLevel == nil and def.gamePassId == nil
+	return def.unlockLevel == nil and def.gamePass ~= true
 end
 
 -- Skins granted by reaching `level` (defaults included).

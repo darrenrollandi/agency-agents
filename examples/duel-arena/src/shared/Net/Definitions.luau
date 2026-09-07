@@ -12,6 +12,8 @@ export type Definition = {
 	kind: Kind,
 	direction: Direction,
 	ratePerSecond: number?,
+	-- How many calls may land at once before the rate applies (default: one second's worth).
+	burst: number?,
 	validate: ((...any) -> boolean)?,
 }
 
@@ -88,6 +90,18 @@ local function validateSaveSettings(...: any): boolean
 		and fov <= CameraConfig.FieldOfViewMax
 end
 
+-- RequestPurchase(kind: "GamePass" | "Product", key: string). The server owns the ids and prompts.
+local function validateRequestPurchase(...: any): boolean
+	if select("#", ...) ~= 2 then
+		return false
+	end
+	local kind, key = ...
+	return (kind == "GamePass" or kind == "Product")
+		and typeof(key) == "string"
+		and #key > 0
+		and #key <= 40
+end
+
 -- UseAbility(slot: 1 | 2)
 local function validateUseAbility(...: any): boolean
 	if select("#", ...) ~= 1 then
@@ -150,6 +164,13 @@ local Definitions: { [string]: Definition } = {
 		direction = "ClientToServer",
 		ratePerSecond = 2,
 		validate = validateSaveSettings,
+	},
+	RequestPurchase = {
+		kind = "Event",
+		direction = "ClientToServer",
+		ratePerSecond = 1,
+		burst = 3,
+		validate = validateRequestPurchase,
 	},
 	-- ProgressionSnapshot(Types.ProgressionSnapshot) on load and every change.
 	ProgressionSnapshot = { kind = "Event", direction = "ServerToClient" },

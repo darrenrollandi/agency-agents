@@ -12,8 +12,28 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 | P3 Abilities | built, smoke-tested solo, **needs 2v2 gate** | pending `v0.3.0` |
 | P4 Progression + data | built, smoke-tested solo, **needs rejoin + session-lock gate** | pending `v0.4.0` |
 | P5 UI/UX | built, smoke-tested solo, **needs Mason navigation gate** | pending `v0.5.0` |
-| P6 Monetisation | in progress | |
-| P7–P8 | not started | |
+| P6 Monetisation | built, receipt idempotency verified, **needs product ids + Studio test purchase** | pending `v0.6.0` |
+| P7 Analytics + release prep | in progress | |
+| P8 Polish | not started | |
+
+## P6 Monetisation — built 07/09/2026
+
+- `Shared/Config/Monetisation.luau`: `SkinPasses` (RevolverVoid, KnifeVoid → pass id) and `DevProducts.XPBoost` (id, 30 min). **All ids are 0 until D creates the products**; the UI shows "Coming soon" / hides the boost row and the server refuses to prompt.
+- `MonetisationService`: owns `ProcessReceipt` (idempotent via `Profile.Data.PurchaseHistory`, capped 50), grants game-pass skins on join and on purchase, prompts purchases server-side from `RequestPurchase(kind, key)`. Studio-only fake product id `999999001` for the harness.
+- `Shared/Util/PurchaseLedger` (pure, tested). Locker: BUY rows for configured passes, XP boost row with ACTIVE countdown. `ProgressionSnapshot.boostUntil`.
+- Tests: `PurchaseLedger.spec` (34 cases, all pass inside Play).
+
+### Verified solo via MCP
+
+`receipt A` → PurchaseGranted, boost +1800 s, history 1. `receipt A` again → PurchaseGranted, nothing changed (idempotent). `receipt B` → stacked to 3600 s, history 2. Unknown product → NotProcessedYet with one `[WARN]`. Forfeit win under boost → +200 XP (×2). Locker boost row reads `ACTIVE · 60 min left`; unconfigured `RequestPurchase` calls are ignored without errors.
+
+### P6 gate (CLAUDE.md §7): test purchases in Studio work; a replayed receipt isn't granted twice; purchase state survives rejoin
+
+D to do (CLAUDE.md §9: you create the products, I never touch the dashboard):
+1. Creator Dashboard → your experience → Monetization: create two **Passes** ("Void Revolver", "Void Knife") and one **Developer Product** ("XP Boost ×2 (30 min)"). Copy the three ids.
+2. Paste them into `src/shared/Config/Monetisation.luau` (`SkinPasses.RevolverVoid`, `SkinPasses.KnifeVoid`, `DevProducts.XPBoost.id`), commit.
+3. Play in Studio (test purchases are free), open the Locker (L): BUY the boost → row turns ACTIVE; BUY a Void skin → it becomes EQUIP. Server Output shows `Monetisation: granted product …`.
+4. Rejoin (stop/Play with API access on, as in the P4 gate) → boost time and skins persist. Replay protection is already proven by the harness.
 
 ## P5 UI/UX — built 07/09/2026
 

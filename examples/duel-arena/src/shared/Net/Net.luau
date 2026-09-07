@@ -67,7 +67,7 @@ function Net.init()
 					`Net: "{name}" is ClientToServer and must define ratePerSecond and validate`
 				)
 			end
-			limiters[name] = RateLimiter.new(def.ratePerSecond :: number)
+			limiters[name] = RateLimiter.new(def.ratePerSecond :: number, def.burst)
 		end
 	end
 	folder.Parent = netFolder

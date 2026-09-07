@@ -43,7 +43,7 @@ return {
 		assertEqual(at5 > 2, true, "some unlocked by 5")
 		assertEqual(at10 >= at5, true, "monotonic")
 		for _, def in Skins.unlockedAtLevel(10) do
-			assertEqual(def.gamePassId, nil, `{def.id} game pass skins never unlock by level`)
+			assertEqual(def.gamePass, nil, `{def.id} game pass skins never unlock by level`)
 		end
 	end,
 

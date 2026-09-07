@@ -22,6 +22,7 @@ local PlayerState = require(script.Parent.PlayerState)
 local DuelService = require(script.Parent.Services.DuelService)
 local DataService = require(script.Parent.Services.DataService)
 local ProgressionService = require(script.Parent.Services.ProgressionService)
+local MonetisationService = require(script.Parent.Services.MonetisationService)
 
 local DebugCommands = {}
 
@@ -111,6 +112,15 @@ local commands: { [string]: (...any) -> any } = {
 	end,
 	addXP = function(name: string, amount: number)
 		return ProgressionService.addXP(playersNamed({ name })[1], amount)
+	end,
+	-- Fake a Marketplace receipt (no Robux involved) to exercise ProcessReceipt idempotency.
+	receipt = function(name: string, productId: number, purchaseId: string)
+		local player = playersNamed({ name })[1]
+		return MonetisationService.handleReceipt({
+			PlayerId = player.UserId,
+			ProductId = productId,
+			PurchaseId = purchaseId,
+		}).Name
 	end,
 	activeDuels = function()
 		return DuelService.activeCount()

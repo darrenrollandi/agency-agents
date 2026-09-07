@@ -43,6 +43,7 @@ local function snapshot(profile: DataService.Profile): Types.ProgressionSnapshot
 		equippedRevolver = profile.Data.EquippedRevolver,
 		equippedKnife = profile.Data.EquippedKnife,
 		boostActive = boostActive(profile),
+		boostUntil = profile.Data.XPBoostUntil,
 		sensitivity = profile.Data.Settings.Sensitivity,
 		fieldOfView = profile.Data.Settings.FieldOfView,
 	}
@@ -80,6 +81,14 @@ local function onProfileLoaded(player: Player, profile: DataService.Profile)
 		profile.Data.EquippedKnife = Skins.defaultFor("Knife")
 	end
 	publish(player, profile)
+end
+
+-- Re-publish after another service changed the profile (MonetisationService).
+function ProgressionService.refresh(player: Player)
+	local profile = DataService.getProfile(player)
+	if profile then
+		publish(player, profile)
+	end
 end
 
 -- True once the player's data is loaded; Matchmaking refuses to queue anyone before that.

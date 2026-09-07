@@ -47,6 +47,8 @@ export type ProgressionSnapshot = {
 	equippedRevolver: string,
 	equippedKnife: string,
 	boostActive: boolean,
+	-- Unix time the XP boost expires (0 = none).
+	boostUntil: number,
 	sensitivity: number,
 	fieldOfView: number,
 }

@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local Skins = require(Shared.Config.Skins)
+local Monetisation = require(Shared.Config.Monetisation)
 local Net = require(Shared.Net.Net)
 local MouseFree = require(script.Parent.Parent.MouseFree)
 
@@ -83,18 +84,22 @@ end
 local function statusFor(
 	def: Skins.SkinDef,
 	snap: Types.ProgressionSnapshot
-): (string, Color3, boolean)
+): (string, Color3, string?)
 	local equipped = def.id == snap.equippedRevolver or def.id == snap.equippedKnife
 	if equipped then
-		return "EQUIPPED", Color3.fromRGB(120, 220, 140), false
+		return "EQUIPPED", Color3.fromRGB(120, 220, 140), nil
 	end
 	if table.find(snap.owned, def.id) then
-		return "EQUIP", Color3.new(1, 1, 1), true
+		return "EQUIP", Color3.new(1, 1, 1), "equip"
 	end
 	if def.unlockLevel then
-		return `Level {def.unlockLevel}`, Color3.fromRGB(150, 150, 160), false
+		return `Level {def.unlockLevel}`, Color3.fromRGB(150, 150, 160), nil
 	end
-	return "Shop (soon)", Color3.fromRGB(200, 170, 90), false
+	-- Game-pass skin: buyable once D has created the pass and set its id.
+	if Monetisation.isConfigured(Monetisation.SkinPasses[def.id] or 0) then
+		return "BUY  (Robux)", Color3.fromRGB(255, 200, 80), "buy"
+	end
+	return "Coming soon", Color3.fromRGB(150, 150, 160), nil
 end
 
 local function swatch(parent: Instance, palette: Skins.Palette)
@@ -129,14 +134,14 @@ local function buildColumn(weapon: Types.WeaponId, x: number, snap: Types.Progre
 	header.Size = UDim2.new(1, 0, 0, 28)
 
 	for index, def in Skins.forWeapon(weapon) do
-		local text, color, canEquip = statusFor(def, snap)
+		local text, color, action = statusFor(def, snap)
 		local row = Instance.new("TextButton")
 		row.Name = def.id
 		row.Position = UDim2.fromOffset(0, 32 + (index - 1) * 52)
 		row.Size = UDim2.new(1, 0, 0, 46)
 		row.BackgroundColor3 = Color3.fromRGB(38, 41, 50)
 		row.BorderSizePixel = 0
-		row.AutoButtonColor = canEquip
+		row.AutoButtonColor = action ~= nil
 		row.Text = ""
 		row.Parent = column
 		local rowCorner = Instance.new("UICorner")
@@ -159,11 +164,54 @@ local function buildColumn(weapon: Types.WeaponId, x: number, snap: Types.Progre
 		status.Size = UDim2.fromOffset(112, 46)
 		status.TextXAlignment = Enum.TextXAlignment.Right
 
-		if canEquip then
+		if action == "equip" then
 			row.Activated:Connect(function()
 				Net.fireServer("EquipSkin", def.id)
 			end)
+		elseif action == "buy" then
+			row.Activated:Connect(function()
+				Net.fireServer("RequestPurchase", "GamePass", def.id)
+			end)
 		end
+	end
+end
+
+-- XP boost row under the columns. Hidden until D configures the developer product.
+local function buildBoostRow(snap: Types.ProgressionSnapshot)
+	local product = Monetisation.DevProducts.XPBoost
+	local active = snap.boostUntil > os.time()
+	if not Monetisation.isConfigured(product.id) and not active then
+		return
+	end
+	local row = Instance.new("TextButton")
+	row.Name = "XPBoost"
+	row.Position = UDim2.new(0, 0, 1, -34)
+	row.Size = UDim2.new(1, 0, 0, 34)
+	row.BackgroundColor3 = Color3.fromRGB(58, 48, 30)
+	row.BorderSizePixel = 0
+	row.AutoButtonColor = not active
+	row.Text = ""
+	row.Parent = content
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = row
+
+	local name = makeLabel(row, product.name, 16, Color3.fromRGB(255, 220, 140))
+	name.Position = UDim2.fromOffset(12, 0)
+	name.Size = UDim2.new(1, -200, 1, 0)
+
+	local status = makeLabel(row, "", 15, Color3.new(1, 1, 1))
+	status.Position = UDim2.new(1, -184, 0, 0)
+	status.Size = UDim2.fromOffset(172, 34)
+	status.TextXAlignment = Enum.TextXAlignment.Right
+	if active then
+		local minutes = math.ceil((snap.boostUntil - os.time()) / 60)
+		status.Text = `ACTIVE  ·  {minutes} min left`
+	else
+		status.Text = "BUY  (Robux)"
+		row.Activated:Connect(function()
+			Net.fireServer("RequestPurchase", "Product", "XPBoost")
+		end)
 	end
 end
 
@@ -180,6 +228,7 @@ local function render()
 		`Level {snap.level}   ·   {snap.xp} / {snap.nextLevelXP} XP   ·   {snap.wins}W {snap.losses}L`
 	buildColumn("Revolver", 0, snap)
 	buildColumn("Knife", 0.5, snap)
+	buildBoostRow(snap)
 end
 
 local function setOpen(value: boolean)
