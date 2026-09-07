@@ -132,7 +132,17 @@ PC keyboard-mouse first. All gameplay input goes through `ContextActionService` 
 ## Maps
 
 - Lobby: flat 128×128 floor, spawn at z = +30, one step-on pad per team size (`Pad_1v1` at z = −20 so far). Standing on a pad queues you; stepping off leaves.
-- Arenas: 2–3 maps by P8. Instanced from `ServerStorage.ArenaTemplates` per duel into slots far from the lobby (x = 1000+). `Arena_Basic` (P1): 64×64 walled square, two centre pillars, teams spawn 48 studs apart facing each other.
+- Arenas: three variants, one picked at random per duel, instanced from `ServerStorage.ArenaTemplates` into slots far from the lobby (x = 1000+). All share a 64×64 walled shell with teams spawning 48 studs apart facing each other; only the cover differs:
+  - **Basic**: two centre pillars.
+  - **Cross**: a plus-shaped wall with a gap in the middle (four lanes, centre peeks).
+  - **Crates**: six waist-high crates and two tall posts.
+  Add a fourth by dropping any Model with `SpawnsA`/`SpawnsB` folders into `ArenaTemplates`; it joins the rotation.
+
+## Audio and feedback
+
+- Sounds are placeholders from Roblox's built-in library (`src/shared/Config/Sounds.luau`), one line each to swap: fire, reload, knife swing, hit / headshot / kill markers, death, hurt, countdown ticks, FIGHT!, round won/lost, abilities, UI.
+- Death is a grey particle poof; taking damage tints the screen red for a third of a second. No blood anywhere (Mild label).
+- Centre announcements: 3, 2, 1, FIGHT!, ROUND WON / LOST / DRAW, SUDDEN DEATH.
 
 ## Credits
 

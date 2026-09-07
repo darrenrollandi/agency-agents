@@ -13,6 +13,7 @@ local Types = require(Shared.Types)
 local Abilities = require(Shared.Config.Abilities)
 local Net = require(Shared.Net.Net)
 local Hud = require(script.Parent.Parent.Hud)
+local SoundController = require(script.Parent.Parent.SoundController)
 
 local ACTION_ABILITY_1 = "Ability1"
 local ACTION_ABILITY_2 = "Ability2"
@@ -162,6 +163,16 @@ local function onAbilityUsed(user: Player, abilityId: string)
 	local def = Abilities.Defs[abilityId :: Abilities.AbilityId]
 	if not def then
 		return
+	end
+	local soundName = if def.id == "Dash" then "Dash" else "Ability"
+	if user == player then
+		SoundController.play(soundName)
+	else
+		local character = user.Character
+		local root = if character then character:FindFirstChild("HumanoidRootPart") else nil
+		if root and root:IsA("BasePart") then
+			SoundController.playAt(soundName, root.Position)
+		end
 	end
 	if def.id == "Dash" then
 		if user == player then

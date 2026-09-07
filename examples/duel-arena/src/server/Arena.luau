@@ -37,24 +37,33 @@ local function getContainer(): Folder
 	return folder :: Folder
 end
 
+local random = Random.new()
+
+-- A random template from ServerStorage.ArenaTemplates; builds every variant if the folder is empty.
 local function getTemplate(): Model
 	local templates = ServerStorage:FindFirstChild("ArenaTemplates")
-	local template = if templates then templates:FindFirstChild(ArenaBuilder.TemplateName) else nil
-	if template and template:IsA("Model") then
-		return template
-	end
-	Log.warn(
-		`Arena: ServerStorage.ArenaTemplates.{ArenaBuilder.TemplateName} is missing; built it from`
-			.. " ArenaBuilder. Run the P1 setup snippet in STATUS.md and save the place."
-	)
 	if not templates then
 		templates = Instance.new("Folder")
 		templates.Name = "ArenaTemplates"
 		templates.Parent = ServerStorage
 	end
-	local built = ArenaBuilder.build()
-	built.Parent = templates
-	return built
+	local models: { Model } = {}
+	for _, child in (templates :: Instance):GetChildren() do
+		if child:IsA("Model") then
+			table.insert(models, child)
+		end
+	end
+	if #models == 0 then
+		Log.warn(
+			"Arena: ServerStorage.ArenaTemplates is empty; built the variants from ArenaBuilder."
+				.. " Run the setup snippet in STATUS.md and save the place."
+		)
+		for _, built in ArenaBuilder.buildAll() do
+			built.Parent = templates
+			table.insert(models, built)
+		end
+	end
+	return models[random:NextInteger(1, #models)]
 end
 
 local function spawnParts(model: Model, folderName: string): { BasePart }
@@ -100,8 +109,9 @@ function Arena.acquire(): ArenaInstance?
 	end
 	usedSlots[slot] = true
 
-	local model = getTemplate():Clone()
-	model.Name = `Arena_{slot}`
+	local template = getTemplate()
+	local model = template:Clone()
+	model.Name = `{template.Name}_{slot}`
 	model:PivotTo(
 		CFrame.new(Rounds.ArenaOrigin + Vector3.new((slot - 1) * Rounds.ArenaSpacing, 0, 0))
 	)

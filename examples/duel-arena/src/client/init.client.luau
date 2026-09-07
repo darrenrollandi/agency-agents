@@ -3,6 +3,7 @@
 -- lobby lines come last. AbilityController and LockerController join in P3 and P4.
 local CameraController = require(script.Controllers.CameraController)
 local HudController = require(script.Controllers.HudController)
+local FxController = require(script.Controllers.FxController)
 local WeaponController = require(script.Controllers.WeaponController)
 local AbilityController = require(script.Controllers.AbilityController)
 local LobbyController = require(script.Controllers.LobbyController)
@@ -11,6 +12,7 @@ local SettingsController = require(script.Controllers.SettingsController)
 
 CameraController.start()
 HudController.start()
+FxController.start()
 WeaponController.start()
 AbilityController.start()
 LobbyController.start()

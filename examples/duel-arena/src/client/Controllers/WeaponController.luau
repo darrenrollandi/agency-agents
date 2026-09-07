@@ -16,6 +16,7 @@ local CameraConfig = require(Shared.Config.Camera)
 local Net = require(Shared.Net.Net)
 local Viewmodel = require(script.Parent.Parent.Viewmodel)
 local Effects = require(script.Parent.Parent.Effects)
+local SoundController = require(script.Parent.Parent.SoundController)
 local CameraController = require(script.Parent.CameraController)
 local HudController = require(script.Parent.HudController)
 
@@ -77,6 +78,7 @@ local function fireRevolver()
 	end
 	if predictedAmmo <= 0 then
 		Net.fireServer("Reload") -- empty click reloads
+		SoundController.play("Reload")
 		return
 	end
 	lastFireAt = now
@@ -104,6 +106,7 @@ local function fireRevolver()
 	CameraController.kick(CameraConfig.RecoilPitchDegrees)
 	local muzzle = viewmodel:muzzlePosition() or origin
 	Effects.flash(muzzle)
+	SoundController.play("Fire")
 	Effects.tracer(muzzle, hitPosition)
 	if result then
 		Effects.impact(hitPosition)
@@ -122,6 +125,7 @@ local function swingKnife()
 	end
 	lastSwingAt = now
 	viewmodel:kick(CameraConfig.ViewmodelKick * 1.5)
+	SoundController.play("Swing")
 	Net.fireServer("Swing")
 end
 
@@ -143,6 +147,7 @@ local function onAction(actionName: string, inputState: Enum.UserInputState, _in
 			and predictedAmmo < Weapons.Revolver.Cylinder
 		then
 			Net.fireServer("Reload")
+			SoundController.play("Reload")
 		end
 	elseif actionName == ACTION_REVOLVER then
 		equip("Revolver")
@@ -218,6 +223,11 @@ function WeaponController.start()
 		predictedAmmo = serverAmmo()
 	end)
 	-- Equipping a skin in the locker re-skins the viewmodel if that weapon is in hand.
+	player:GetAttributeChangedSignal("Reloading"):Connect(function()
+		if player:GetAttribute("Reloading") == false and weapon == "Revolver" then
+			SoundController.play("ReloadDone")
+		end
+	end)
 	for _, attribute in { "EquippedRevolver", "EquippedKnife" } do
 		player:GetAttributeChangedSignal(attribute):Connect(function()
 			showWeapon(weapon)
@@ -226,14 +236,20 @@ function WeaponController.start()
 	onWeaponAttribute()
 
 	Net.onClient("HitConfirm", function(confirm: Types.HitConfirm)
-		HudController.hitMarker(
-			if confirm.killed then "kill" elseif confirm.headshot then "headshot" else "hit"
+		local kind: HudController.HitKind = if confirm.killed
+			then "kill"
+			elseif confirm.headshot then "headshot"
+			else "hit"
+		HudController.hitMarker(kind)
+		SoundController.play(
+			if kind == "kill" then "Kill" elseif kind == "headshot" then "Headshot" else "Hit"
 		)
 	end)
 	Net.onClient("ShotFired", function(shooter: Player, origin: Vector3, hitPosition: Vector3)
 		if shooter ~= player then
 			Effects.tracer(origin, hitPosition)
 			Effects.impact(hitPosition)
+			SoundController.playAt("Fire", origin)
 		end
 	end)
 

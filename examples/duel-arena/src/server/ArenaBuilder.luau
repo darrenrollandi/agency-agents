@@ -1,10 +1,12 @@
 --!strict
--- ArenaBuilder: constructs the Arena_Basic model in code. Run once via execute_luau (Edit) to create
--- ServerStorage.ArenaTemplates.Arena_Basic, then edit it visually in Studio. Arena.luau falls back to
--- build() if the template is missing so a forgotten place-save never blocks a playtest.
+-- ArenaBuilder: constructs the arena templates in code. Run the setup snippet in STATUS.md once to
+-- create ServerStorage.ArenaTemplates.<Variant>, then edit them visually in Studio. Arena.luau falls
+-- back to buildAll() if the folder is empty so a forgotten place-save never blocks a playtest.
+-- Every variant shares the shell (floor, walls, spawns); only the cover differs.
 local ArenaBuilder = {}
 
-ArenaBuilder.TemplateName = "Arena_Basic"
+ArenaBuilder.Variants = { "Arena_Basic", "Arena_Cross", "Arena_Crates" }
+ArenaBuilder.TemplateName = ArenaBuilder.Variants[1]
 
 local SIZE = 64
 local WALL_HEIGHT = 24
@@ -55,11 +57,9 @@ local function spawns(parent: Instance, name: string, x: number, color: Color3)
 	end
 end
 
--- A walled square arena with team spawns facing each other and two centre pillars for cover.
--- Pivot is the centre of the floor's top surface.
-function ArenaBuilder.build(): Model
+local function shell(name: string): (Model, Folder)
 	local model = Instance.new("Model")
-	model.Name = ArenaBuilder.TemplateName
+	model.Name = name
 
 	local floor = part(
 		"Floor",
@@ -87,17 +87,77 @@ function ArenaBuilder.build(): Model
 	local cover = Instance.new("Folder")
 	cover.Name = "Cover"
 	cover.Parent = model
-	local pillarColor = Color3.fromRGB(120, 124, 136)
-	local pillar = Vector3.new(4, 8, 4)
-	part("Pillar1", pillar, CFrame.new(0, 4, -10), pillarColor, Enum.Material.SmoothPlastic, cover)
-	part("Pillar2", pillar, CFrame.new(0, 4, 10), pillarColor, Enum.Material.SmoothPlastic, cover)
 
 	spawns(model, "SpawnsA", -SPAWN_X, Color3.fromRGB(0, 170, 255))
 	spawns(model, "SpawnsB", SPAWN_X, Color3.fromRGB(255, 120, 40))
 
 	model.PrimaryPart = floor
 	model.WorldPivot = CFrame.new()
+	return model, cover
+end
+
+local PILLAR = Color3.fromRGB(120, 124, 136)
+local CRATE = Color3.fromRGB(150, 120, 80)
+local PLASTIC = Enum.Material.SmoothPlastic
+
+local covers: { [string]: (Folder) -> () } = {
+	-- Two centre pillars: the original.
+	Arena_Basic = function(cover)
+		local pillar = Vector3.new(4, 8, 4)
+		part("Pillar1", pillar, CFrame.new(0, 4, -10), PILLAR, PLASTIC, cover)
+		part("Pillar2", pillar, CFrame.new(0, 4, 10), PILLAR, PLASTIC, cover)
+	end,
+	-- A plus-shaped wall with a gap in the middle: four lanes, peeks at the centre.
+	Arena_Cross = function(cover)
+		local alongX = Vector3.new(8, 8, 2)
+		local alongZ = Vector3.new(2, 8, 8)
+		part("ArmEast", alongX, CFrame.new(10, 4, 0), PILLAR, PLASTIC, cover)
+		part("ArmWest", alongX, CFrame.new(-10, 4, 0), PILLAR, PLASTIC, cover)
+		part("ArmNorth", alongZ, CFrame.new(0, 4, -10), PILLAR, PLASTIC, cover)
+		part("ArmSouth", alongZ, CFrame.new(0, 4, 10), PILLAR, PLASTIC, cover)
+	end,
+	-- Scattered crates to slide between, plus two tall posts.
+	Arena_Crates = function(cover)
+		local crate = Vector3.new(4, 4, 4)
+		local positions = {
+			Vector3.new(-10, 2, -8),
+			Vector3.new(10, 2, -8),
+			Vector3.new(-10, 2, 8),
+			Vector3.new(10, 2, 8),
+			Vector3.new(-18, 2, 0),
+			Vector3.new(18, 2, 0),
+		}
+		for index, position in positions do
+			part(
+				`Crate{index}`,
+				crate,
+				CFrame.new(position),
+				CRATE,
+				Enum.Material.WoodPlanks,
+				cover
+			)
+		end
+		local post = Vector3.new(2, 10, 2)
+		part("Post1", post, CFrame.new(0, 5, -14), PILLAR, PLASTIC, cover)
+		part("Post2", post, CFrame.new(0, 5, 14), PILLAR, PLASTIC, cover)
+	end,
+}
+
+-- One variant by name (defaults to Arena_Basic for unknown names).
+function ArenaBuilder.build(name: string?): Model
+	local variant = if name and covers[name] then name else ArenaBuilder.TemplateName
+	local model, cover = shell(variant)
+	covers[variant](cover)
 	return model
+end
+
+-- Every variant, in Variants order.
+function ArenaBuilder.buildAll(): { Model }
+	local models = {}
+	for _, name in ArenaBuilder.Variants do
+		table.insert(models, ArenaBuilder.build(name))
+	end
+	return models
 end
 
 return ArenaBuilder

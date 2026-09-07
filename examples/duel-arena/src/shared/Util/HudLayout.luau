@@ -214,6 +214,29 @@ function HudLayout.build(): ScreenGui
 	hitMarker.Text = "×"
 	hitMarker.TextTransparency = 1
 
+	-- Full-screen red flash when you take damage (behind everything else).
+	local damageFlash = Instance.new("Frame")
+	damageFlash.Name = "DamageFlash"
+	damageFlash.Size = UDim2.fromScale(1, 1)
+	damageFlash.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+	damageFlash.BackgroundTransparency = 1
+	damageFlash.BorderSizePixel = 0
+	damageFlash.ZIndex = 0
+	damageFlash.Parent = gui
+
+	-- Centre announcements: FIGHT!, ROUND WON, SUDDEN DEATH.
+	local announce = label(
+		gui,
+		"AnnounceLabel",
+		Vector2.new(0.5, 0.5),
+		UDim2.fromScale(0.5, 0.32),
+		UDim2.new(0.8, 0, 0, 80),
+		64,
+		WHITE,
+		center
+	)
+	announce.TextTransparency = 1
+
 	-- Lobby: level line and the three things you can do. Shown only outside a duel.
 	local lobby = Instance.new("Frame")
 	lobby.Name = "LobbyPanel"

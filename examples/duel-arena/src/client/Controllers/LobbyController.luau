@@ -13,6 +13,8 @@ local XP = require(Shared.Config.XP)
 local Skins = require(Shared.Config.Skins)
 local Net = require(Shared.Net.Net)
 local Hud = require(script.Parent.Parent.Hud)
+local SoundController = require(script.Parent.Parent.SoundController)
+local FxController = require(script.Parent.FxController)
 
 local NOTIFY_SECONDS = 3
 local RENDER_INTERVAL = 0.1
@@ -38,6 +40,56 @@ local queue: Types.QueueStatus? = nil
 local duel: Types.DuelUpdate? = nil
 local notifyToken = 0
 local lastRender = 0
+local lastState: Types.DuelState? = nil
+local lastSuddenDeath = false
+local lastTick = 0
+
+local GOLD = Color3.fromRGB(255, 200, 80)
+local GREEN = Color3.fromRGB(120, 220, 140)
+local RED = Color3.fromRGB(240, 100, 100)
+local GREY = Color3.fromRGB(220, 220, 220)
+
+-- Announcements and sounds on state changes; called for every DuelUpdate.
+local function onStateChange(update: Types.DuelUpdate)
+	if update.state ~= lastState then
+		lastState = update.state
+		if update.state == "Countdown" then
+			lastTick = 0
+		elseif update.state == "Live" then
+			FxController.announce("FIGHT!", GOLD, 0.9)
+			SoundController.play("Fight")
+		elseif update.state == "RoundOver" then
+			if update.roundWinner == nil then
+				FxController.announce("DRAW", GREY, 1.5)
+			elseif update.roundWinner == update.team then
+				FxController.announce("ROUND WON", GREEN, 1.5)
+				SoundController.play("RoundWon")
+			else
+				FxController.announce("ROUND LOST", RED, 1.5)
+				SoundController.play("RoundLost")
+			end
+		end
+	end
+	if update.state == "Live" and update.suddenDeath and not lastSuddenDeath then
+		FxController.announce("SUDDEN DEATH", RED, 1.5)
+		SoundController.play("RoundLost")
+	end
+	lastSuddenDeath = update.suddenDeath
+end
+
+-- 3, 2, 1 during the countdown.
+local function tickCountdown(update: Types.DuelUpdate)
+	local endsAt = update.countdownEndsAt
+	if update.state ~= "Countdown" or not endsAt then
+		return
+	end
+	local remaining = math.ceil(endsAt - Workspace:GetServerTimeNow())
+	if remaining ~= lastTick and remaining >= 1 and remaining <= 3 then
+		lastTick = remaining
+		FxController.announce(tostring(remaining), GREY, 0.5)
+		SoundController.play("Tick")
+	end
+end
 
 local function formatClock(seconds: number): string
 	local whole = math.max(0, math.ceil(seconds))
@@ -127,6 +179,7 @@ local function render()
 	local update = duel
 	lobbyPanel.Visible = update == nil
 	if update then
+		tickCountdown(update)
 		scoreLabel.Text = `Team {update.team}   ·   A {update.scoreA} - {update.scoreB} B`
 		statusLabel.Text = duelStatus(update)
 	elseif queue then
@@ -172,9 +225,12 @@ function LobbyController.start()
 	Net.onClient("DuelUpdate", function(update: Types.DuelUpdate)
 		if update.state == "Cleanup" then
 			duel = nil
+			lastState = nil
+			lastSuddenDeath = false
 			hideResults()
 		else
 			duel = update
+			onStateChange(update)
 			if update.state == "DuelOver" then
 				showResults(update)
 			end

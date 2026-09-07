@@ -145,3 +145,15 @@ Clients reliable-order events from one server thread, so `DuelService` broadcast
 ## 07/09/2026 — Release readiness lives in `docs/RELEASE_CHECKLIST.md`
 
 Place settings, the maturity-questionnaire draft (target Mild, no blood, fixed-price purchases only), data/monetisation/analytics verification and the go-public steps are one checklist D ticks. Claude drafts and updates it; D executes every dashboard action and publishes.
+
+## 07/09/2026 — Sounds are a config table of built-in Roblox placeholders
+
+`Shared/Config/Sounds.luau` maps event names to `rbxasset://sounds/...` files that ship with the client, so nothing needs uploading and the game has audio from day one. `client/SoundController` plays them 2D (own actions) or 3D at a position (others' shots, deaths). Swapping a sound is one line; Creator Store ids (`rbxassetid://`) drop straight in once the art direction is chosen. Two built-ins that failed to load in Studio (`swoosh.wav`, `Rubber band sling shot.wav`) were replaced; the Polish spec checks id shapes and the MCP probe checks they actually load. Rejected: inserting Creator Store audio now (art direction undecided; licensing review per asset).
+
+## 07/09/2026 — Arena variants are built from one shell with different cover; a random one per duel
+
+`ArenaBuilder.Variants` = Basic (two pillars), Cross (plus-shaped wall with a gap), Crates (six crates and two posts). All share the same 64×64 shell, walls and spawn layout so balance and spawn logic never change between maps. `Arena.acquire` picks a random Model from `ServerStorage.ArenaTemplates`, so D can hand-edit or add a template in Studio and it is in rotation immediately. Rejected: fixed rotation (predictable), one map (P8 asked for 2–3).
+
+## 07/09/2026 — Feedback effects stay bloodless and cheap
+
+Death = grey-white particle poof plus a sound; damage = a 0.35 s red screen tint plus a grunt (throttled); round beats = centre announcements (3-2-1, FIGHT!, ROUND WON/LOST, SUDDEN DEATH). All client-only, self-destroying instances under the Camera, no server cost. The maturity target (Mild) forbids blood, so any future VFX must keep this palette.

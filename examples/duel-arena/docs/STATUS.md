@@ -14,7 +14,24 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 | P5 UI/UX | built, smoke-tested solo, **needs Mason navigation gate** | pending `v0.5.0` |
 | P6 Monetisation | built, receipt idempotency verified, **needs product ids + Studio test purchase** | pending `v0.6.0` |
 | P7 Analytics + release prep | built, events verified firing, **needs a published test session** | pending `v0.7.0` |
-| P8 Polish | in progress | |
+| P8 Polish | built (sound, VFX, 3 arenas), **needs perf pass + bug bash with Mason's friends** | pending `v0.8.0` |
+
+## P8 Polish — built 07/09/2026
+
+- **Three arenas** (`ArenaBuilder.Variants`: Basic, Cross, Crates) sharing one shell; `Arena.acquire` picks a random template from `ServerStorage.ArenaTemplates` (rebuilt in the place). Duel logs show which (`Arena_Cross_1`).
+- **Sound** (`Config/Sounds.luau`, `client/SoundController`): 16 events on Roblox built-in placeholders (fire, reload, reload done, swing, hit/headshot/kill, death, hurt, tick, fight, round won/lost, ability, dash, UI). 2D for your own actions, 3D for others' shots, deaths and abilities. All 16 verified loading in Studio after replacing two missing built-ins.
+- **FX** (`FxController`): death poof (grey particles, no blood) + sound for every character, red damage tint + grunt on taking damage, centre announcements (3-2-1 ticks, FIGHT!, ROUND WON / LOST / DRAW, SUDDEN DEATH). HUD v4 adds `AnnounceLabel` and `DamageFlash`.
+- Tests: `Polish.spec` (sound ids, arena variants build with 4+4 spawns, 4 walls, cover) — 37 cases, all pass inside Play.
+
+### Verified solo via MCP
+
+Three consecutive duels used `Arena_Basic`, `Arena_Cross`, `Arena_Basic`; a live round with 30 damage then a kill produced no client errors; 16/16 sounds report `IsLoaded` with a duration; HUD has the announce and flash elements.
+
+### P8 gate (CLAUDE.md §7): release checklist complete; 60 fps on D's machine; bug bash with Mason's friends
+
+1. **Performance pass** (D): a 2-client duel with Studio's MicroProfiler / Performance stats open; target < 16 ms client frame time, memory under 1 GB after 10 min. Report anything above and I'll profile the suspect (likely candidates: particle poofs, tracer parts, Heartbeat scans).
+2. **Bug bash**: 4+ players, all three arenas, all abilities, locker and settings. Collect every oddity into STATUS → Known bugs.
+3. Work through `docs/RELEASE_CHECKLIST.md`. Then D publishes (never Claude).
 
 ## P7 Analytics + release prep — built 07/09/2026
 
@@ -152,8 +169,8 @@ Defaults were chosen for 2, 3, 4, 6 and 7; confirm or change them in `GAME_DESIG
   local SS, SSS, RS, SG = game:GetService("ServerStorage"), game:GetService("ServerScriptService"), game:GetService("ReplicatedStorage"), game:GetService("StarterGui")
   local function fresh(m) local c = m:Clone(); c.Parent = m.Parent; local r = require(c); c:Destroy(); return r end
   local t = SS:FindFirstChild("ArenaTemplates") or Instance.new("Folder", SS); t.Name = "ArenaTemplates"
-  local AB = fresh(SSS.Server.ArenaBuilder); local old = t:FindFirstChild(AB.TemplateName); if old then old:Destroy() end
-  AB.build().Parent = t
+  local AB = fresh(SSS.Server.ArenaBuilder); for _, old in t:GetChildren() do old:Destroy() end
+  for _, m in AB.buildAll() do m.Parent = t end
   local HL = fresh(RS.Shared.Util.HudLayout); local oh = SG:FindFirstChild(HL.Name); if oh then oh:Destroy() end
   HL.build().Parent = SG
   ```
