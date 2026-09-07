@@ -36,6 +36,29 @@ export type DuelUpdate = {
 	duelWinner: TeamId?,
 }
 
+-- Server → client whenever progression data changes (load, duel result, equip).
+export type ProgressionSnapshot = {
+	xp: number,
+	level: number,
+	nextLevelXP: number,
+	wins: number,
+	losses: number,
+	owned: { string },
+	equippedRevolver: string,
+	equippedKnife: string,
+	boostActive: boolean,
+}
+
+-- Server → client after a duel: what it earned them.
+export type DuelReward = {
+	won: boolean,
+	xpGained: number,
+	boosted: boolean,
+	level: number,
+	leveledUp: boolean,
+	unlocked: { string },
+}
+
 -- Server → shooter after a hit the server accepted.
 export type HitConfirm = {
 	victimName: string,

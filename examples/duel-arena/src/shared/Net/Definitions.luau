@@ -62,6 +62,15 @@ local function validateEquip(...: any): boolean
 	return weapon == "Revolver" or weapon == "Knife"
 end
 
+-- EquipSkin(skinId: string)
+local function validateEquipSkin(...: any): boolean
+	if select("#", ...) ~= 1 then
+		return false
+	end
+	local skinId = ...
+	return typeof(skinId) == "string" and #skinId > 0 and #skinId <= 40
+end
+
 -- UseAbility(slot: 1 | 2)
 local function validateUseAbility(...: any): boolean
 	if select("#", ...) ~= 1 then
@@ -111,6 +120,18 @@ local Definitions: { [string]: Definition } = {
 		ratePerSecond = 4,
 		validate = validateUseAbility,
 	},
+
+	-- Progression
+	EquipSkin = {
+		kind = "Event",
+		direction = "ClientToServer",
+		ratePerSecond = 3,
+		validate = validateEquipSkin,
+	},
+	-- ProgressionSnapshot(Types.ProgressionSnapshot) on load and every change.
+	ProgressionSnapshot = { kind = "Event", direction = "ServerToClient" },
+	-- DuelReward(Types.DuelReward) after a duel.
+	DuelReward = { kind = "Event", direction = "ServerToClient" },
 
 	-- Combat, server → client.
 	-- HitConfirm(Types.HitConfirm) to the attacker after an accepted hit.

@@ -10,8 +10,31 @@ Updated 07/09/2026 (Session 2, first live Studio session). Full-auto run through
 | P1 Core loop | done, gate passed (2-client duel to 5) | `v0.1.0` |
 | P2 Weapons | done, gate passed (Mason feel test + exploit test) | `v0.2.0` |
 | P3 Abilities | built, smoke-tested solo, **needs 2v2 gate** | pending `v0.3.0` |
-| P4 Progression + data | in progress | |
-| P5–P8 | not started | |
+| P4 Progression + data | built, smoke-tested solo, **needs rejoin + session-lock gate** | pending `v0.4.0` |
+| P5 UI/UX | in progress | |
+| P6–P8 | not started | |
+
+## P4 Progression + data — built 07/09/2026
+
+- **ProfileStore** vendored at `src/server/Vendor/ProfileStore.luau` (upstream main; excluded from StyLua/Selene).
+- **DataService**: one session-locked profile per player (`Player_<UserId>` in store `PlayerData_v1`), `Reconcile` against `Shared/Config/ProfileTemplate`, `AddUserId` for GDPR, kick on load failure or stolen session, `EndSession` on leave. In Studio `Config.UseMockData` selects `store.Mock`: nothing touches live DataStores. Expected Studio console lines: `StudioAccessToApisNotAllowed` + `[ProfileStore]: Roblox API services unavailable` (its availability probe; the Mock is working).
+- **ProfileTemplate** v1: XP, Wins, Losses, Duels, RoundsWon, OwnedSkins, EquippedRevolver/Knife, PurchaseHistory, XPBoostUntil, Settings (Sensitivity, FOV), FirstJoin/LastJoin, Funnel.
+- **ProgressionService**: XP curve `50·L·(L+1)` (`Config/XP.luau`), rewards 100 win / 40 loss / +10 per round, ×2 under boost. Level-up grants skins (`Config/Skins.luau`: 5 per weapon, level 2/5/8 and 3/6/10 plus a Void game-pass skin each). Publishes `XP`, `Level`, `EquippedRevolver`, `EquippedKnife` attributes and a `ProgressionSnapshot`; sends `DuelReward` after each duel. `EquipSkin` remote validated (owned + known). Nobody can queue before their profile is loaded.
+- **Skins applied**: `WeaponModels.build(weapon, anchored, skinId)` paints the same geometry; the server's hand model and the client viewmodel both read the equipped attribute and re-skin live.
+- **Locker** (`LockerController`, built in code): L / gamepad Select in the lobby, two columns, swatches, EQUIPPED / EQUIP / Level N / Shop (soon), click to equip. Also opens via the `Open` attribute on `PlayerGui.LockerGui` (for the P5 lobby menu and tests).
+- DebugCommands: `profile`, `addXP`.
+- Tests: `XP.spec`, `Skins.spec` (29 cases, all pass inside Play).
+
+### Verified solo via MCP
+
+Mock profile loads (FirstJoin set, defaults owned); `addXP 1500` → level 5, unlocked Blued/Gold/Jade, attributes and snapshot updated; forfeit duel → +100 XP, Wins 1, `DuelReward` received on the client; `EquipSkin RevolverGold` → attribute, snapshot, server world model built with `Skin=RevolverGold`; `EquipSkin KnifeNeon` (unowned) refused; locker renders correct rows and statuses, opens/closes.
+
+### P4 gate (CLAUDE.md §7): leave and rejoin keeps XP, level, equipped skins; session lock tested with two Studio instances
+
+Mock data resets every Play session by design, so the gate needs the **published place** or Studio with API access:
+1. **Persistence**: in a Studio session with *Enable Studio Access to API Services* ON (Game Settings → Security), set `Config.UseMockData` to `false` temporarily (`src/shared/Config/init.luau`), Play, win a duel or `addXP`, equip a skin, stop, Play again → level and skins should persist. Turn API access back off afterwards (CLAUDE.md §6).
+2. **Session lock**: open the place in two Studio instances with API access on, Play in both with the same account → the second load should kick with "Your data was opened on another server".
+3. Check the mouse is free (cursor visible, panel clickable) while the locker is open, and locked again on close.
 
 ## P3 Abilities — built 07/09/2026
 
@@ -59,7 +82,7 @@ Defaults were chosen for 2, 3, 4, 6 and 7; confirm or change them in `GAME_DESIG
 2. ~~Team sizes at launch~~ → default: **1v1 first**; code supports all four via pad `TeamSize`.
 3. ~~Round timer / sudden death~~ → default: **90 s, tie → sudden death, simultaneous wipe → draw**.
 4. ~~Abilities~~ → default: **two per weapon, fixed** (Speed Loader, Dead Eye, Dash, Second Wind).
-5. XP-only levels, or XP + soft currency for skins?
+5. ~~XP-only or XP + currency~~ → default: **XP-only** (see GAME_DESIGN → Progression).
 6. ~~Revolver / knife numbers~~ → default: **6 rounds, 35 body, ×2 head, 0.4 s, 1.6 s reload; knife 50 (two-hit), 6 studs**.
 7. ~~Friendly fire~~ → default: **off**.
 8. Art direction.
@@ -81,7 +104,8 @@ Defaults were chosen for 2, 3, 4, 6 and 7; confirm or change them in `GAME_DESIG
   ```
 
 - **Tests**: run inside Play (Server DataModel) for a fresh VM: `require(game.ServerStorage.Tests.RunTests)()`.
-- **Driving a duel solo** (Play, Server DataModel): `game.ServerStorage.DebugCommands:Invoke("startDuel", "1v1", {"Name"}, {"Name"})`, `:Invoke("dummy", "Name", 10)`, `:Invoke("kill", "Name")`, `:Invoke("strikes", "Name")`, `:Invoke("abort", 1)`.
+- **Driving a duel solo** (Play, Server DataModel): `game.ServerStorage.DebugCommands:Invoke("startDuel", "1v1", {"Name"}, {"Name"})`, `:Invoke("dummy", "Name", 10)`, `:Invoke("kill", "Name")`, `:Invoke("strikes", "Name")`, `:Invoke("abort", 1)`, `:Invoke("profile", "Name")`, `:Invoke("addXP", "Name", 1500)`. `startDuel` with an empty second team is a forfeit win (fast XP path).
+- MCP `execute_luau` calls are dispatched one after another even when requested in parallel: test a server→client event inside one client script (fire a remote, then listen), never across two calls.
 - `require` from the command bar / `execute_luau` returns a separate module instance from running scripts; in Edit mode it is also cached across runs.
 - `execute_luau` prints go to Studio's Output window, not the tool result: `return` a string to read values back.
 - Selene's `roblox` std needs a one-off `selene generate-roblox-std` if it complains the std is missing.

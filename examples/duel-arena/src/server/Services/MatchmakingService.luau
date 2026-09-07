@@ -16,6 +16,7 @@ local Net = require(Shared.Net.Net)
 local Log = require(Shared.Util.Log)
 local PlayerState = require(script.Parent.Parent.PlayerState)
 local DuelService = require(script.Parent.DuelService)
+local ProgressionService = require(script.Parent.ProgressionService)
 
 local SCAN_INTERVAL = 0.2
 local PAD_HEIGHT = 8
@@ -143,7 +144,12 @@ local function scan(pad: Pad)
 	-- Join: on the pad, free, not yet queued here.
 	for player in standing do
 		local state = PlayerState.get(player)
-		if state.queuePad ~= pad.name and not PlayerState.inDuel(player) then
+		-- Nobody queues before their data is loaded: a duel must always be able to award XP.
+		if
+			state.queuePad ~= pad.name
+			and not PlayerState.inDuel(player)
+			and ProgressionService.isReady(player)
+		then
 			joinQueue(pad, player)
 		end
 	end

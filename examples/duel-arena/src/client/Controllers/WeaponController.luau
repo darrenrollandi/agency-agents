@@ -52,12 +52,21 @@ local function hitsHumanoid(instance: Instance?): boolean
 	return model ~= nil and model:FindFirstChildOfClass("Humanoid") ~= nil
 end
 
+local function equippedSkin(target: Types.WeaponId): string?
+	local skin = player:GetAttribute(`Equipped{target}`)
+	return if typeof(skin) == "string" then skin else nil
+end
+
+local function showWeapon(target: Types.WeaponId?)
+	viewmodel:setWeapon(target, if target then equippedSkin(target) else nil)
+end
+
 local function equip(target: Types.WeaponId)
 	if weapon == target then
 		return
 	end
 	weapon = target
-	viewmodel:setWeapon(target)
+	showWeapon(target)
 	Net.fireServer("Equip", target)
 end
 
@@ -190,12 +199,12 @@ local function onWeaponAttribute()
 	local serverWeapon = player:GetAttribute("Weapon")
 	if serverWeapon == "Revolver" or serverWeapon == "Knife" then
 		weapon = serverWeapon :: Types.WeaponId
-		viewmodel:setWeapon(weapon)
+		showWeapon(weapon)
 		predictedAmmo = serverAmmo()
 		bind()
 	else
 		weapon = nil
-		viewmodel:setWeapon(nil)
+		showWeapon(nil)
 		unbind()
 	end
 end
@@ -208,6 +217,12 @@ function WeaponController.start()
 	player:GetAttributeChangedSignal("Ammo"):Connect(function()
 		predictedAmmo = serverAmmo()
 	end)
+	-- Equipping a skin in the locker re-skins the viewmodel if that weapon is in hand.
+	for _, attribute in { "EquippedRevolver", "EquippedKnife" } do
+		player:GetAttributeChangedSignal(attribute):Connect(function()
+			showWeapon(weapon)
+		end)
+	end
 	onWeaponAttribute()
 
 	Net.onClient("HitConfirm", function(confirm: Types.HitConfirm)

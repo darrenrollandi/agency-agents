@@ -19,17 +19,26 @@ local Viewmodel = {}
 Viewmodel.__index = Viewmodel
 
 export type Viewmodel = typeof(setmetatable(
-	{} :: { _model: Model?, _weapon: Types.WeaponId?, _kick: number, _time: number },
+	{} :: {
+		_model: Model?,
+		_weapon: Types.WeaponId?,
+		_skin: string?,
+		_kick: number,
+		_time: number,
+	},
 	Viewmodel
 ))
 
 function Viewmodel.new(): Viewmodel
-	return setmetatable({ _model = nil, _weapon = nil, _kick = 0, _time = 0 }, Viewmodel)
+	return setmetatable(
+		{ _model = nil, _weapon = nil, _skin = nil, _kick = 0, _time = 0 },
+		Viewmodel
+	)
 end
 
--- Show `weapon`, or hide everything with nil.
-function Viewmodel.setWeapon(self: Viewmodel, weapon: Types.WeaponId?)
-	if self._weapon == weapon and self._model then
+-- Show `weapon` in `skin`, or hide everything with nil. Rebuilds only when something changed.
+function Viewmodel.setWeapon(self: Viewmodel, weapon: Types.WeaponId?, skin: string?)
+	if self._weapon == weapon and self._skin == skin and (self._model ~= nil or weapon == nil) then
 		return
 	end
 	if self._model then
@@ -37,9 +46,10 @@ function Viewmodel.setWeapon(self: Viewmodel, weapon: Types.WeaponId?)
 		self._model = nil
 	end
 	self._weapon = weapon
+	self._skin = skin
 	self._kick = 0
 	if weapon then
-		local model = WeaponModels.build(weapon, true)
+		local model = WeaponModels.build(weapon, true, skin)
 		model.Name = "Viewmodel"
 		model.Parent = Workspace.CurrentCamera
 		self._model = model

@@ -86,9 +86,25 @@ No passive health regeneration: Roblox's default regen script is removed on spaw
 
 Players unlock **knife skins** and **revolver skins** as they progress. Skins are cosmetic only.
 
-- **TBD:** XP-only levels, or XP + soft currency for buying skins?
-- XP curve: **TBD** (write as a table in `src/shared/Config/XP.luau` once decided).
-- XP sources: duel win, duel loss (smaller), round wins, first duel of the day.
+- **Default chosen 07/09/2026 (D to confirm):** XP-only levels. No soft currency until the loop is proven.
+- XP curve (`src/shared/Config/XP.luau`): level L needs 50·L·(L+1) XP. L1 100, L2 300, L3 600, L5 1500, L10 5500, L20 21000, cap L50.
+- XP sources: duel win 100, duel loss 40, +10 per round won. ×2 while an XP boost (P6) is active. First-duel-of-the-day bonus not implemented yet.
+- Skins (`src/shared/Config/Skins.luau`), unlocked automatically on reaching the level, equipped in the Locker (L in the lobby):
+
+| Weapon | Skin | Unlock |
+|---|---|---|
+| Revolver | Standard Issue | default |
+| Revolver | Blued Steel | level 2 |
+| Revolver | Gold Rush | level 5 |
+| Revolver | Crimson | level 8 |
+| Revolver | Void | game pass (P6) |
+| Knife | Field Knife | default |
+| Knife | Jade | level 3 |
+| Knife | Obsidian | level 6 |
+| Knife | Neon | level 10 |
+| Knife | Void | game pass (P6) |
+
+Skins are palettes on the same blocky geometry for now; real meshes come with the art direction decision.
 
 ## Monetisation
 

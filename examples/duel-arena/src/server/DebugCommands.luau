@@ -20,6 +20,8 @@ local Log = require(Shared.Util.Log)
 local Net = require(Shared.Net.Net)
 local PlayerState = require(script.Parent.PlayerState)
 local DuelService = require(script.Parent.Services.DuelService)
+local DataService = require(script.Parent.Services.DataService)
+local ProgressionService = require(script.Parent.Services.ProgressionService)
 
 local DebugCommands = {}
 
@@ -102,6 +104,13 @@ local commands: { [string]: (...any) -> any } = {
 		local ahead = root.CFrame * CFrame.new(0, 0, -(distance or 10))
 		local cframe = CFrame.lookAt(ahead.Position, root.Position)
 		return spawnDummy(cframe):GetFullName()
+	end,
+	profile = function(name: string)
+		local profile = DataService.getProfile(playersNamed({ name })[1])
+		return if profile then table.clone(profile.Data) else nil
+	end,
+	addXP = function(name: string, amount: number)
+		return ProgressionService.addXP(playersNamed({ name })[1], amount)
 	end,
 	activeDuels = function()
 		return DuelService.activeCount()

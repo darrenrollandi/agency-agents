@@ -145,7 +145,9 @@ local function attachWorldModel(player: Player, weapon: WeaponId)
 	if not hand or not hand:IsA("BasePart") then
 		return
 	end
-	local model = WeaponModels.build(weapon, false)
+	-- ProgressionService publishes the equipped skin as an attribute; nil falls back to the default.
+	local skin = player:GetAttribute(`Equipped{weapon}`)
+	local model = WeaponModels.build(weapon, false, if typeof(skin) == "string" then skin else nil)
 	model.Name = WORLD_MODEL_NAME
 	local grip = model.PrimaryPart :: BasePart
 	model:PivotTo(hand.CFrame * HAND_OFFSET)
@@ -330,6 +332,14 @@ function CombatService.arm(player: Player)
 	loadouts[player] = loadout
 	publish(player, loadout)
 	attachWorldModel(player, "Revolver")
+end
+
+-- Rebuild the third-person model (equipped skin changed). No-op when disarmed.
+function CombatService.refreshWorldModel(player: Player)
+	local loadout = loadouts[player]
+	if loadout then
+		attachWorldModel(player, loadout.weapon)
+	end
 end
 
 -- The weapon in hand, or nil when disarmed.

@@ -1,9 +1,11 @@
 --!strict
 -- WeaponModels: blocky placeholder geometry for the revolver and knife, built in code so the client
--- viewmodel and the server's third-person hand model share one source. Skins replace this in P4.
+-- viewmodel and the server's third-person hand model share one source. Skins are palettes from
+-- Config/Skins applied to the same geometry.
 -- Every model's PrimaryPart is "Grip", centred on the model origin, and the weapon points along -Z.
 -- Parts never collide or answer raycasts, so a weapon can't shield its owner.
 local Types = require(script.Parent.Types)
+local Skins = require(script.Parent.Config.Skins)
 
 local WeaponModels = {}
 
@@ -48,13 +50,15 @@ local function weldTo(grip: BasePart, other: BasePart)
 end
 
 -- `anchored` = true for a viewmodel (moved with PivotTo), false for a hand-welded world model.
-function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
+-- `skinId` falls back to the weapon's default skin when nil or unknown.
+function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean, skinId: string?): Model
+	local skin = (if skinId then Skins.get(skinId) else nil) or Skins.get(Skins.defaultFor(weapon))
+	local palette = (skin :: Skins.SkinDef).palette
+	local bodyMaterial = palette.Material or Enum.Material.Metal
+
 	local model = Instance.new("Model")
 	model.Name = weapon
-	local dark = Color3.fromRGB(45, 40, 38)
-	local gunmetal = Color3.fromRGB(70, 74, 82)
-	local steel = Color3.fromRGB(200, 205, 215)
-	local metal = Enum.Material.Metal
+	model:SetAttribute("Skin", (skin :: Skins.SkinDef).id)
 
 	if weapon == "Revolver" then
 		local grip = part(
@@ -62,7 +66,7 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 			"Grip",
 			Vector3.new(0.35, 0.9, 0.4),
 			CFrame.new(),
-			dark,
+			palette.Grip,
 			Enum.Material.Wood,
 			anchored
 		)
@@ -73,8 +77,8 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 				"Frame",
 				Vector3.new(0.4, 0.5, 1.0),
 				CFrame.new(0, 0.65, -0.45),
-				gunmetal,
-				metal,
+				palette.Body,
+				bodyMaterial,
 				anchored
 			)
 		)
@@ -85,8 +89,8 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 				"Cylinder",
 				Vector3.new(0.5, 0.5, 0.5),
 				CFrame.new(0, 0.65, -0.35),
-				steel,
-				metal,
+				palette.Accent,
+				Enum.Material.Metal,
 				anchored
 			)
 		)
@@ -97,8 +101,8 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 				"Barrel",
 				Vector3.new(0.22, 0.22, 1.2),
 				CFrame.new(0, 0.75, -1.45),
-				gunmetal,
-				metal,
+				palette.Body,
+				bodyMaterial,
 				anchored
 			)
 		)
@@ -109,8 +113,8 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 				"Hammer",
 				Vector3.new(0.12, 0.3, 0.2),
 				CFrame.new(0, 0.95, 0),
-				steel,
-				metal,
+				palette.Accent,
+				Enum.Material.Metal,
 				anchored
 			)
 		)
@@ -121,7 +125,7 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 			"Grip",
 			Vector3.new(0.3, 0.3, 0.9),
 			CFrame.new(),
-			dark,
+			palette.Grip,
 			Enum.Material.Wood,
 			anchored
 		)
@@ -132,8 +136,8 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 				"Guard",
 				Vector3.new(0.6, 0.6, 0.12),
 				CFrame.new(0, 0, -0.5),
-				gunmetal,
-				metal,
+				palette.Accent,
+				Enum.Material.Metal,
 				anchored
 			)
 		)
@@ -144,8 +148,8 @@ function WeaponModels.build(weapon: Types.WeaponId, anchored: boolean): Model
 				"Blade",
 				Vector3.new(0.08, 0.35, 1.4),
 				CFrame.new(0, 0.05, -1.25),
-				steel,
-				metal,
+				palette.Body,
+				bodyMaterial,
 				anchored
 			)
 		)

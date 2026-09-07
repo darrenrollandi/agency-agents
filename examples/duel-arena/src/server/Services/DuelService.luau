@@ -17,6 +17,7 @@ local Arena = require(script.Parent.Parent.Arena)
 local CharacterService = require(script.Parent.CharacterService)
 local CombatService = require(script.Parent.CombatService)
 local AbilityService = require(script.Parent.AbilityService)
+local ProgressionService = require(script.Parent.ProgressionService)
 
 type TeamId = Types.TeamId
 type DuelState = Types.DuelState
@@ -273,6 +274,16 @@ handlers.DuelOver = function(duel)
 	else
 		duel.duelWinner = DuelRules.duelWinner(duel.score.A, duel.score.B)
 	end
+	-- XP and stats. Everyone still here gets a result; leavers already forfeited theirs.
+	local results: { ProgressionService.DuelResult } = {}
+	eachPlayer(duel, function(player, team)
+		table.insert(results, {
+			player = player,
+			won = duel.duelWinner == team,
+			roundsWon = duel.score[team],
+		})
+	end)
+	ProgressionService.recordDuel(results)
 	local suffix = if duel.forfeit then " (forfeit)" else ""
 	Log.info(
 		`[Duel {duel.id}] over: {duel.duelWinner or "no winner"} {duel.score.A}-{duel.score.B}{suffix}`
