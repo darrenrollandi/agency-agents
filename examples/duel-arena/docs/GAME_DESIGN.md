@@ -1,0 +1,120 @@
+# Game Design
+
+Living design doc. Seeded 07/09/2026 from CLAUDE.md §2. Items marked **TBD** are open questions for D and Mason; answer them here, not in chat.
+
+## Pitch
+
+Fast-paced first-person dueling. Step on a pad, get thrown into an arena, win rounds until your team hits 5, land back in the lobby with XP and unlock progress. Rounds are short (target under 60 s). Getting back into the action fast matters more than anything.
+
+## Core loop
+
+1. Player lands in the **lobby**.
+2. Player steps on a **duel pad** (one per team size). When the pad has enough players they are teleported into a free **arena**.
+3. A **duel** is a series of **rounds**. A round ends when one team is fully eliminated. Winning team scores a point. **First to 5 wins the duel.**
+4. Winners and losers return to the lobby. XP and unlock progress awarded.
+
+## Team sizes
+
+1v1, 2v2, 3v3, 4v4. **TBD:** all four at launch, or 1v1 + 2v2 first?
+
+## Round rules
+
+- Round ends when one team is fully eliminated.
+- **TBD:** round timer if nobody dies? Sudden-death rule (e.g. shrinking arena, one-hit knife only)?
+- **TBD:** friendly fire in team modes (assume off).
+- Between rounds: short countdown, everyone respawns at team spawns with full health and ammo, cooldowns reset.
+
+## Weapons
+
+Everyone gets the same two weapons in every duel.
+
+### Revolver
+
+Hitscan, limited cylinder, reload.
+
+| Stat | Value |
+|---|---|
+| Cylinder size | **TBD** (6?) |
+| Damage per body shot | **TBD** |
+| Headshot multiplier | **TBD** |
+| Fire rate | **TBD** |
+| Reload time | **TBD** |
+
+### Knife
+
+Melee, fast, always available.
+
+| Stat | Value |
+|---|---|
+| Kill | **TBD** one-hit or two-hit |
+| Swing rate | **TBD** |
+| Range | **TBD** |
+
+## Abilities
+
+Each weapon has its own set of cooldown-based abilities. The framework is generic; the list is not fixed until D confirms.
+
+- **TBD:** how many per weapon (assume 2–3)?
+- **TBD:** picked before a duel as a loadout, or fixed for everyone?
+- Design session with Mason: brainstorm 6–8 per weapon, pick the 2 that make the best "I outplayed you" moments.
+
+### Revolver abilities (candidates)
+
+_Empty until the design session._
+
+### Knife abilities (candidates)
+
+_Empty until the design session._
+
+## Progression
+
+Players unlock **knife skins** and **revolver skins** as they progress. Skins are cosmetic only.
+
+- **TBD:** XP-only levels, or XP + soft currency for buying skins?
+- XP curve: **TBD** (write as a table in `src/shared/Config/XP.luau` once decided).
+- XP sources: duel win, duel loss (smaller), round wins, first duel of the day.
+
+## Monetisation
+
+Cosmetic only plus optional convenience. No pay-to-win.
+
+- Skin game passes.
+- One dev product (XP boost) as the first test of `ProcessReceipt`.
+
+## Content maturity
+
+Target label **Mild**. Stylised hits, no blood, bodies ragdoll briefly then despawn. Realistic blood or gore pushes the label to Moderate/Restricted and locks out the Kids 5–8 and Select 9–15 audiences.
+
+## Platform and input
+
+PC keyboard-mouse first. All gameplay input goes through `ContextActionService` with named actions (`Fire`, `Reload`, `SwapWeapon`, `Ability1`, `Ability2`) so touch and gamepad can be added without rewrites.
+
+- **TBD:** launch platforms (PC only, or PC + mobile + console)?
+
+## Art direction
+
+- **TBD:** low-poly stylised vs blocky Roblox-default vs something else. Decide before any asset work.
+
+## Maps
+
+- Lobby: flat baseplate with one pad per team size (P0/P1 scaffold).
+- Arenas: 2–3 maps by P8. Instanced from `ServerStorage.ArenaTemplates` per duel.
+
+## Credits
+
+- **TBD:** in-game "Lead Tester" credit for Mason?
+
+## Open questions
+
+Mirrors CLAUDE.md §10. Strike each one out here as it's answered and move the answer into the relevant section above.
+
+1. Working title.
+2. Team sizes at launch.
+3. Round timer / sudden death.
+4. Abilities: count and loadout vs fixed.
+5. Progression currency.
+6. Revolver and knife numbers.
+7. Friendly fire.
+8. Art direction.
+9. Launch platforms.
+10. Mason's credit.
