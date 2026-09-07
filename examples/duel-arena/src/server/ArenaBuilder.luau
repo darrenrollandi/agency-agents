@@ -51,6 +51,7 @@ local function spawns(parent: Instance, name: string, x: number, color: Color3)
 		)
 		spawn.Transparency = 0.5
 		spawn.CanCollide = false
+		spawn.CanQuery = false -- never blocks a shot
 	end
 end
 

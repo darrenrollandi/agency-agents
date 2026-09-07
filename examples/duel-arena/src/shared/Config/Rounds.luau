@@ -13,6 +13,8 @@ local Rounds = {
 	DuelOverSeconds = 5,
 	-- Lobby respawn delay after dying outside a duel.
 	LobbyRespawnSeconds = 3,
+	-- A dead duelist's body is removed after this long (readable, no gore, keeps the label Mild).
+	CorpseSeconds = 2,
 	-- Arena slots: concurrent duels supported and where their arenas are placed.
 	MaxArenas = 8,
 	ArenaOrigin = Vector3.new(1000, 0, 1000),

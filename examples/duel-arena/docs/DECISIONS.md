@@ -81,3 +81,27 @@ Server sends `countdownEndsAt` / `roundEndsAt` as `workspace:GetServerTimeNow()`
 ## 07/09/2026 — Studio-only `DebugCommands` BindableFunction for solo testing
 
 `require` from the command bar or MCP `execute_luau` gets its own module instance, so it cannot see the running services' state. `ServerStorage.DebugCommands` (created only when `Config.Debug`) exposes `startDuel`, `abort`, `kill`, `state`, `activeDuels` on the live instances. Never exists in a published server. Rejected: a debug RemoteFunction (attack surface); `_G` (untyped, easy to leak).
+
+## 07/09/2026 — Weapons are not Tools
+
+The revolver and knife are a fixed loadout, so the Roblox Tool/Backpack system (equip slots, drop, the default hotbar UI) only gets in the way. Loadout state (weapon, ammo, reloading, fire timestamps) lives in CombatService and is published to the owning client as Player attributes `Weapon`, `Ammo`, `Reloading`. Input goes through ContextActionService as CLAUDE.md requires. Rejected: Tools (P1's Tag placeholder proved they work but drag the hotbar and equip semantics with them).
+
+## 07/09/2026 — Server re-raycast with a fixed lag-tolerance corridor
+
+The client sends `{origin, direction, hitPart?, timestamp}`. The server drops the shot if the origin is more than 8 studs from the shooter's head, if the fire interval, ammo or reload state disagree, then raycasts itself. Its ray decides headshots. If its ray misses but the claimed victim's root lies within 3 studs of the ray with nothing solid in between, it counts as a body hit. No rollback, no history buffer. Rejected: trusting the client's hitPart (trivially spoofable, and the smoke test shows it being ignored); full lag compensation (complexity not justified until Mason reports missed hits).
+
+## 07/09/2026 — Non-player humanoids are always hittable
+
+CombatService damages any model with a Humanoid; the friendly-fire and same-duel checks apply only when the model belongs to a Player. This makes training dummies (`DebugCommands.dummy`) work for solo hit-reg tests and leaves room for lobby target practice. Rejected: player-only damage (would have made P2 untestable without a second machine).
+
+## 07/09/2026 — Weapon geometry is code (`Shared/WeaponModels`), shared by viewmodel and world model
+
+One builder produces the blocky revolver/knife for the client viewmodel (anchored, pivoted every frame under the Camera) and the server's hand-welded third-person model. Parts never collide or answer raycasts (`CanQuery = false`), so a weapon can't shield its owner. Skins (P4) replace the builder output per weapon. Rejected: mesh assets now (art direction is still an open question).
+
+## 07/09/2026 — Weapon defaults chosen to unblock P2 (D and Mason to tune)
+
+Revolver: 6 rounds, 35 body, ×2 head (70), 0.4 s between shots, 1.6 s reload, 400-stud range. Knife: 50 damage (two-hit kill), 6-stud box, 0.45 s between swings. Health 100, so three body shots or head + body. All in `Shared/Config/Weapons.luau`; recoil and FOV in `Config/Camera.luau`.
+
+## 07/09/2026 — Edit-mode `require` is cached: setup snippets require clones
+
+In the Edit DataModel, `require(ModuleScript)` from the command bar or MCP is cached across runs, so a setup snippet that rebuilt the HUD after a code change produced the old layout. Requiring a *clone* of the module forces a fresh load of the current Source. Every setup snippet in STATUS.md now does this. Rejected: restarting Studio to clear the cache.

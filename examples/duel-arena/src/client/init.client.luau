@@ -1,8 +1,14 @@
 --!strict
--- Client entry point. Bootstraps Controllers in order. P1 only needs LobbyController; the rest
--- (Camera → Weapon → Ability → Hud → Locker) come online in their phases.
+-- Client entry point. Order matters: the camera and HUD exist before weapons draw on them, and the
+-- lobby lines come last. AbilityController and LockerController join in P3 and P4.
+local CameraController = require(script.Controllers.CameraController)
+local HudController = require(script.Controllers.HudController)
+local WeaponController = require(script.Controllers.WeaponController)
 local LobbyController = require(script.Controllers.LobbyController)
 
+CameraController.start()
+HudController.start()
+WeaponController.start()
 LobbyController.start()
 
 print("[Client] Duel Arena client booted")

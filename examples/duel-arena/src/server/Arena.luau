@@ -63,6 +63,7 @@ local function spawnParts(model: Model, folderName: string): { BasePart }
 	if folder then
 		for _, child in folder:GetChildren() do
 			if child:IsA("BasePart") then
+				child.CanQuery = false -- spawn markers never block a shot
 				table.insert(parts, child)
 			end
 		end

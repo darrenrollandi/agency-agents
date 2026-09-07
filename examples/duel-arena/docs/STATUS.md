@@ -2,65 +2,75 @@
 
 Updated 07/09/2026 (Session 2, first live Studio session).
 
-## Phase: P1 Core loop — built and smoke-tested solo, awaiting the 2-client gate test
+## Phase: P2 Weapons — built and smoke-tested solo, awaiting Mason's feel test
 
-P0 closed 07/09/2026 (commit `a827707`; tag `v0.0.1` still to be pushed, see Notes).
+- P0 closed 07/09/2026 → `v0.0.1`.
+- P1 closed 07/09/2026 → `v0.1.0` (2-client duel to 5 with no errors, confirmed by D).
+- P2 built 07/09/2026; gate needs Mason (see below).
 
-### Done this session
+### Done in P2
 
-- **Net** (`Shared/Net`): remotes created from `Definitions.luau` at boot; client→server remotes must declare `ratePerSecond` + `validate` (enforced), bad payloads are dropped with a per-player strike counter and a single warn. `Util/RateLimiter` is a token bucket with injected clock.
-- **Matchmaking** (`Services/MatchmakingService`): any `Workspace.Lobby.Pad_*` part with a numeric `TeamSize` attribute is a queue. **Stand on the pad to queue, step off to leave.** One overlap query per pad every 0.2 s. Full queue → teams dealt alternately → `DuelService.startDuel`. Pad label shows `1v1  1/2`.
-- **Arenas** (`Arena.luau`, `ArenaBuilder.luau`): `ServerStorage.ArenaTemplates.Arena_Basic` (64×64 walled square, two pillars, 4 spawns per team) is cloned per duel into a slot at x = 1000 + 300·(slot−1), z = 1000, and destroyed on cleanup. If the template is missing the server rebuilds it from code with a warning.
-- **DuelService**: `Waiting → Countdown → Live → RoundOver → (Countdown | DuelOver) → Cleanup`, every transition checked against `Shared/DuelRules` and logged. 3 s frozen countdown, 90 s round timer, tie on timer → sudden death, simultaneous wipe → draw (round replayed), first to 5. Leavers forfeit; an empty duel cleans itself up. `DuelService.abort(id)` tears one down.
-- **CharacterService**: `Players.CharacterAutoLoads = false`; the service owns every spawn so a dead duelist stays dead until the next round. Lobby deaths respawn after 3 s.
-- **CombatService**: P1 placeholder weapon is a server-side **Tag** Tool (red neon stick, auto-equipped when a round goes Live). Click → server box hitbox 7 studs in front → enemy `TakeDamage(100)`. No client code, no remotes, friendly fire off.
-- **LobbyController** + `StarterGui.DuelHud` (built from `Shared/Util/HudLayout`): queue status, `Team B · A 0 - 0 B`, countdown / round clock / sudden death / VICTORY-DEFEAT, server notices.
-- **Tests**: 14 cases across `Trove`, `DuelRules`, `RateLimiter`, `Modes` specs — all pass in Studio.
-- **DebugCommands** (Studio only): `ServerStorage.DebugCommands` BindableFunction drives the *running* services from `execute_luau` (Server): `startDuel`, `abort`, `kill`, `state`, `activeDuels`.
-- **Lobby changes in the place**: `Pad_1v1`'s ProximityPrompt removed (step-on queueing). `ServerStorage.ArenaTemplates.Arena_Basic` and `StarterGui.DuelHud` created.
-- Repo: `.gitattributes` forces LF so StyLua passes on Windows; `rokit.toml` pins luau-lsp 1.69.0.
+- **Revolver** (`CombatService`): hitscan, 6-round cylinder, 35 body / 70 head, 0.4 s between shots, 1.6 s reload, 400-stud range. The client raycasts for instant feedback and sends `{origin, direction, hitPart?, timestamp}`; the server checks armed + alive, origin within 8 studs of the head, fire interval, ammo and reload state, then **re-raycasts** and only its own ray decides. Basic lag tolerance: if the server ray misses, a claimed victim whose root lies within 3 studs of the ray with nothing solid in between counts as a body hit.
+- **Knife**: server box hitbox 6 studs in front of the root, 50 damage (two-hit kill), 0.45 s between swings. Facing-gated by construction.
+- **Swap** (1 / 2 / Q, gamepad Y), **reload** (R / X). Swapping cancels a reload. Empty click auto-reloads.
+- **No Tools.** Loadout state lives in `CombatService` and is published as Player attributes `Weapon`, `Ammo`, `Reloading`; the client reads those. Default backpack UI disabled.
+- **Third-person weapon** welded to the right hand so opponents see what you hold. **Viewmodel** (blocky revolver / knife from `Shared/WeaponModels`) parented to the Camera, with fire kick, bob and sway. **Recoil** pitch kick that settles. FOV 80.
+- **Effects**: muzzle flash, tracer, impact dot; other players' shots draw tracers via an `UnreliableRemoteEvent`.
+- **HUD v2** (`StarterGui.DuelHud`, rebuilt): health bottom-left, weapon + ammo / RELOADING bottom-right, crosshair dot, hit marker (white hit, yellow headshot, red kill).
+- **Death**: disarmed on death, body removed after 2 s, fresh character at full health next round.
+- **Net**: `Fire` / `Reload` / `Swing` / `Equip` are the first client→server remotes; each has a pure validator (NaN / non-unit / wrong-type payloads are dropped with a strike) and a rate limit 25% above the weapon cadence.
+- **Training dummies**: non-player humanoids are always hittable, so hit-reg can be tested solo (`DebugCommands` `dummy`).
+- Tests: `Validators.spec` added (6 spec files, all pass).
 
-### Verified solo via MCP (Play Solo, one client)
+### Verified solo via MCP (Play Solo)
 
-- Boot: no warnings or errors. Pad registered, remotes created, auto-load off.
-- Walk onto pad → queued (label `1v1  1/2`, HUD text, debug log). Walk off → dequeued.
-- `startDuel` (same player on both teams as a stand-in): arena cloned, spawned at team spawn, frozen (WalkSpeed 0), Live after 3 s (WalkSpeed 16, Tag equipped), HUD `Round 1 · 1:08 · alive 1 - 1`, kill → RoundOver → next Countdown respawn at full health → abort → lobby, arena destroyed, 0 active duels.
+- Legit headshot → HitConfirm 70, ammo 6→5. Body shot → 35, kill. Knife ×2 → 50 + 50 kill.
+- **Exploit checks**: spoofed origin 60 studs away → dropped, no ammo used. Aim at the sky while claiming the dummy's head as `hitPart` → no hit, ammo used. Malformed payload → dropped, strike counted (1), one `[WARN]`.
+- Reload → `RELOADING` on HUD, 6/6 after 1.6 s. Swap → attribute, HUD and viewmodel follow.
+- Real input path: Q swapped weapons, a simulated left click fired (6→5).
+- Death → disarmed, corpse gone at 2 s, respawn 100 HP, re-armed at Live. Abort → lobby, arena destroyed.
 
-## D to do: the P1 gate test
+## D and Mason to do: the P2 gate test
 
-1. **Save the place (Ctrl+S) before anything else.** The arena template, the HUD and the pad-prompt removal live only in the open Studio session until saved. (If it's lost, the server rebuilds the arena and the client builds a fallback HUD, with warnings; the P1 setup snippet below restores the real ones.)
-2. `rojo serve` running and connected. Studio **Test → Clients and Servers**, **2 players**, Start.
-3. Both players walk onto the blue pad. Label should reach `1v1  2/2` and both should teleport to the arena within a second.
-4. 3 s frozen countdown, then `Round 1 · 1:30`. Each player has the red Tag stick equipped; **left-click while facing the opponent within ~7 studs** eliminates them.
-5. Round winner scores, 3 s pause, next round. Play to 5: `VICTORY` / `DEFEAT`, then back to the lobby after 5 s.
-6. Also try: one client leaves mid-duel → the other should see `VICTORY  (opponent left)`.
-7. Watch the **server** Output for `[WARN]` or red errors. Report: did teleport/respawn feel right, did Tag hits register, anything odd in the HUD.
-
-**Gate passes when** two clients complete a full duel to 5 and land back in the lobby with no console errors. Then tag `v0.1.0`.
+1. **Save the place (Ctrl+S).** `StarterGui.DuelHud` and `ServerStorage.ArenaTemplates.Arena_Basic` were rebuilt this session.
+2. **Test → Clients and Servers, 2 players.** Both onto the pad. In the arena: left-click fires, R reloads, Q or 1/2 swaps, knife on 2.
+3. Gate (CLAUDE.md §7): Mason plays a 1v1 vs D and says it **feels good**; no "I clearly hit him" complaints in 10 rounds; and the exploit test below does nothing.
+4. **Exploit test** (Play, any client window, command bar):
+   ```lua
+   local r = game.ReplicatedStorage.Shared.Net.Remotes
+   local cam = workspace.CurrentCamera
+   -- claim a hit on the opponent while aiming at the sky
+   local enemy = workspace:FindFirstChild("<opponent name>")
+   r.Fire:FireServer(cam.CFrame.Position, Vector3.new(0, 1, 0), enemy and enemy.Head, workspace:GetServerTimeNow())
+   r.Fire:FireServer("garbage") -- expect one [WARN] Net: dropped ... on the server
+   ```
+   Expected: opponent takes no damage; server Output shows a single `[WARN]` for the garbage payload.
+5. Report: does the revolver feel snappy or floaty, is 35/70 damage right, is the knife range fair, does the reload feel long, anything odd with the viewmodel or recoil. Numbers are all in `src/shared/Config/Weapons.luau` and `Config/Camera.luau`.
 
 ## Known bugs / limitations
 
-- Only a same-player smoke test has run; a real 2-client duel is untested.
-- Tag hitbox is a fixed box in front of the root part, not a swing animation. Fine for P1, replaced in P2.
-- Respawn uses `LoadCharacter` + `PivotTo`; if a player ever appears at the lobby spawn for a frame before the arena, that's the engine re-placing the character (there's a deferred second pivot to cover it).
-- MCP `screen_capture` times out in this session (Studio window not foregrounded). MCP-simulated keypresses don't reach ProximityPrompts (moot now that pads are step-on).
+- Only solo smoke tests have run for P2; a real 2-client feel test is outstanding.
+- Viewmodel is grip-only (no arms) and has no fire/reload/swing animation. Sounds absent (P8).
+- Lag tolerance is a fixed 3-stud corridor, not rollback. Revisit only if Mason reports missed hits.
+- Head detection is by part name `Head`; fine for R6/R15 and dummies.
+- MCP `screen_capture` times out in this session (Studio window not foregrounded).
 
 ## Next
 
-1. P1 gate test with D + Mason (above). Fix whatever it surfaces. Tag `v0.1.0`.
-2. Answer the open questions below; move answers into `GAME_DESIGN.md`.
-3. P2 Weapons: revolver (hitscan, cylinder, reload) + knife with server re-raycast, viewmodel, hit markers.
+1. P2 gate with Mason. Tune `Config/Weapons.luau` from feedback. Tag `v0.2.0`.
+2. Answer open questions 1, 4, 5, 8, 9, 10 (below); the design session for abilities.
+3. P3 Abilities: generic framework (cooldowns server-side, client VFX), first two abilities per weapon.
 
 ## Open questions for D (from CLAUDE.md §10)
 
-Defaults were chosen for 2, 3 and 7 to unblock P1; confirm or change them in `GAME_DESIGN.md`.
+Defaults were chosen for 2, 3, 6 and 7; confirm or change them in `GAME_DESIGN.md`.
 
 1. Working title.
 2. ~~Team sizes at launch~~ → default: **1v1 first**; code supports all four via pad `TeamSize`.
 3. ~~Round timer / sudden death~~ → default: **90 s, tie → sudden death, simultaneous wipe → draw**.
 4. Abilities per weapon (2–3?), loadout-picked or fixed?
 5. XP-only levels, or XP + soft currency for skins?
-6. Revolver: cylinder size, damage, headshot multiplier, reload time. Knife: one- or two-hit kill?
+6. ~~Revolver / knife numbers~~ → default: **6 rounds, 35 body, ×2 head, 0.4 s, 1.6 s reload; knife 50 (two-hit), 6 studs**.
 7. ~~Friendly fire~~ → default: **off**.
 8. Art direction.
 9. Launch platforms.
@@ -68,20 +78,20 @@ Defaults were chosen for 2, 3 and 7 to unblock P1; confirm or change them in `GA
 
 ## Notes
 
-- Tag P0: `git tag v0.0.1 a827707 && git push origin v0.0.1`.
-- **P1 setup snippet** (Edit DataModel, `execute_luau` or command bar) rebuilds the arena template and HUD if the place wasn't saved:
+- **Setup snippet** (Edit DataModel) rebuilds the arena template and HUD from the current code if the place wasn't saved. Edit-mode `require` caches modules across runs, so it requires *clones*:
 
   ```lua
   local SS, SSS, RS, SG = game:GetService("ServerStorage"), game:GetService("ServerScriptService"), game:GetService("ReplicatedStorage"), game:GetService("StarterGui")
+  local function fresh(m) local c = m:Clone(); c.Parent = m.Parent; local r = require(c); c:Destroy(); return r end
   local t = SS:FindFirstChild("ArenaTemplates") or Instance.new("Folder", SS); t.Name = "ArenaTemplates"
-  local AB = require(SSS.Server.ArenaBuilder); local old = t:FindFirstChild(AB.TemplateName); if old then old:Destroy() end
+  local AB = fresh(SSS.Server.ArenaBuilder); local old = t:FindFirstChild(AB.TemplateName); if old then old:Destroy() end
   AB.build().Parent = t
-  local HL = require(RS.Shared.Util.HudLayout); local oh = SG:FindFirstChild(HL.Name); if oh then oh:Destroy() end
+  local HL = fresh(RS.Shared.Util.HudLayout); local oh = SG:FindFirstChild(HL.Name); if oh then oh:Destroy() end
   HL.build().Parent = SG
   ```
 
-- **Driving a duel solo** (Play, `execute_luau` on the Server DataModel): `game.ServerStorage.DebugCommands:Invoke("startDuel", "1v1", {"Name"}, {"Name"})`, then `:Invoke("kill", "Name")`, `:Invoke("abort", 1)`.
-- `require` from the command bar / `execute_luau` returns a **separate module instance** from the running server scripts (its own upvalues). Use `DebugCommands` to reach live state.
+- **Driving a duel solo** (Play, `execute_luau` on the Server DataModel): `game.ServerStorage.DebugCommands:Invoke("startDuel", "1v1", {"Name"}, {"Name"})`, then `:Invoke("dummy", "Name", 10)` for a target, `:Invoke("kill", "Name")`, `:Invoke("strikes", "Name")`, `:Invoke("abort", 1)`.
+- `require` from the command bar / `execute_luau` returns a **separate module instance** from running scripts, and in Edit mode that instance is **cached across runs**. Use `DebugCommands` for live state and the clone trick for fresh source.
 - `execute_luau` prints go to Studio's Output window, not the tool result: `return` a string to read values back.
 - `src/server/Vendor/ProfileStore.luau` is not vendored yet; not needed before P4.
 - Selene's `roblox` std needs a one-off `selene generate-roblox-std` if it complains the std is missing.

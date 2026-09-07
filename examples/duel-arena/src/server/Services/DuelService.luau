@@ -141,11 +141,20 @@ local function endRound(duel: Duel, outcome: DuelRules.Outcome)
 	transition(duel, "RoundOver")
 end
 
-local function onDeath(duel: Duel, player: Player)
+local function onDeath(duel: Duel, player: Player, character: Model?)
 	if duel.state ~= "Live" or not duel.alive[player] then
 		return
 	end
 	duel.alive[player] = false
+	CombatService.disarm(player)
+	if character then
+		-- Readable, not gory: the body lies for a moment, then goes.
+		task.delay(Rounds.CorpseSeconds, function()
+			if character.Parent then
+				character:Destroy()
+			end
+		end)
+	end
 	Log.debug(`[Duel {duel.id}] {player.Name} eliminated`)
 	local outcome = DuelRules.roundOutcome(aliveCount(duel, "A"), aliveCount(duel, "B"))
 	if outcome then
@@ -188,7 +197,7 @@ handlers.Countdown = function(duel)
 				local humanoid = character:FindFirstChildOfClass("Humanoid")
 				if humanoid then
 					duel.roundTrove:connect(humanoid.Died, function()
-						onDeath(duel, player)
+						onDeath(duel, player, character)
 					end)
 				end
 			else
@@ -273,6 +282,7 @@ end
 handlers.Cleanup = function(duel)
 	duel.roundTrove:clean()
 	duel.trove:clean()
+	disarmAll(duel) -- an abort can arrive straight from Live
 	broadcast(duel)
 	eachPlayer(duel, function(player)
 		local state = PlayerState.get(player)

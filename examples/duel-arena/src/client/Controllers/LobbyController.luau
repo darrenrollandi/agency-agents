@@ -1,7 +1,6 @@
 --!strict
--- LobbyController: shows pad queue status, the duel scoreboard and server notices on the P1 HUD.
--- HudController takes over the in-duel HUD in P5; this stays responsible for the lobby.
-local Players = game:GetService("Players")
+-- LobbyController: the top HUD lines: pad queue status, duel scoreboard and state, server notices.
+-- HudController owns health, ammo, crosshair and hit marker.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -9,13 +8,10 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Types = require(Shared.Types)
 local Net = require(Shared.Net.Net)
-local Log = require(Shared.Util.Log)
-local HudLayout = require(Shared.Util.HudLayout)
+local Hud = require(script.Parent.Parent.Hud)
 
 local NOTIFY_SECONDS = 3
 local RENDER_INTERVAL = 0.1
-
-local player = Players.LocalPlayer
 
 local LobbyController = {}
 
@@ -26,19 +22,6 @@ local queue: Types.QueueStatus? = nil
 local duel: Types.DuelUpdate? = nil
 local notifyToken = 0
 local lastRender = 0
-
-local function getHud(): ScreenGui
-	local playerGui = player:WaitForChild("PlayerGui")
-	local gui = playerGui:WaitForChild(HudLayout.Name, 5)
-	if not gui then
-		Log.warn(
-			`StarterGui.{HudLayout.Name} is missing; built a fallback. Run the P1 setup snippet and save the place.`
-		)
-		gui = HudLayout.build()
-		gui.Parent = playerGui
-	end
-	return gui :: ScreenGui
-end
 
 local function formatClock(seconds: number): string
 	local whole = math.max(0, math.ceil(seconds))
@@ -101,10 +84,9 @@ local function notify(message: string)
 end
 
 function LobbyController.start()
-	local gui = getHud()
-	scoreLabel = gui:WaitForChild("ScoreLabel") :: TextLabel
-	statusLabel = gui:WaitForChild("StatusLabel") :: TextLabel
-	notifyLabel = gui:WaitForChild("NotifyLabel") :: TextLabel
+	scoreLabel = Hud.element("ScoreLabel") :: TextLabel
+	statusLabel = Hud.element("StatusLabel") :: TextLabel
+	notifyLabel = Hud.element("NotifyLabel") :: TextLabel
 
 	Net.onClient("QueueStatus", function(status: Types.QueueStatus?)
 		queue = status

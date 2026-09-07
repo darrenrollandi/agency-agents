@@ -6,6 +6,8 @@ export type TeamId = "A" | "B"
 
 export type DuelState = "Waiting" | "Countdown" | "Live" | "RoundOver" | "DuelOver" | "Cleanup"
 
+export type WeaponId = "Revolver" | "Knife"
+
 -- Server → client while a player stands in a pad queue. nil means "no longer queued".
 export type QueueStatus = {
 	padName: string,
@@ -32,6 +34,14 @@ export type DuelUpdate = {
 	roundEndsAt: number?,
 	roundWinner: TeamId?,
 	duelWinner: TeamId?,
+}
+
+-- Server → shooter after a hit the server accepted.
+export type HitConfirm = {
+	victimName: string,
+	damage: number,
+	headshot: boolean,
+	killed: boolean,
 }
 
 return {}

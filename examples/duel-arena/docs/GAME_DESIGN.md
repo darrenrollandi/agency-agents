@@ -33,23 +33,31 @@ Everyone gets the same two weapons in every duel.
 
 Hitscan, limited cylinder, reload.
 
+Defaults chosen 07/09/2026 (D and Mason to tune in `src/shared/Config/Weapons.luau`):
+
 | Stat | Value |
 |---|---|
-| Cylinder size | **TBD** (6?) |
-| Damage per body shot | **TBD** |
-| Headshot multiplier | **TBD** |
-| Fire rate | **TBD** |
-| Reload time | **TBD** |
+| Cylinder size | 6 |
+| Damage per body shot | 35 (three body shots to kill) |
+| Headshot multiplier | ×2 (70; head + body kills) |
+| Fire interval | 0.4 s, semi-automatic |
+| Reload time | 1.6 s; swapping cancels; empty click auto-reloads |
+| Range | 400 studs |
+| Recoil | 2.5° pitch kick, settles in ~0.3 s |
 
 ### Knife
 
 Melee, fast, always available.
 
+Defaults chosen 07/09/2026:
+
 | Stat | Value |
 |---|---|
-| Kill | **TBD** one-hit or two-hit |
-| Swing rate | **TBD** |
-| Range | **TBD** |
+| Kill | Two-hit (50 damage) |
+| Swing interval | 0.45 s |
+| Range | 6 studs, box 4.5 wide × 5 tall in front of the player |
+
+Controls: left click fires or swings, R reloads, 1 / 2 select, Q toggles. Gamepad: R2 fire, X reload, Y swap. Everything goes through `ContextActionService`, so touch buttons are a flag away.
 
 ## Abilities
 
@@ -114,7 +122,7 @@ Mirrors CLAUDE.md §10. Strike each one out here as it's answered and move the a
 3. ~~Round timer / sudden death~~ — default 90 s, tie → sudden death (see Round rules). Confirm.
 4. Abilities: count and loadout vs fixed.
 5. Progression currency.
-6. Revolver and knife numbers.
+6. ~~Revolver and knife numbers~~ — defaults in the Weapons tables. Tune after Mason's first P2 session.
 7. ~~Friendly fire~~ — default off. Confirm.
 8. Art direction.
 9. Launch platforms.
