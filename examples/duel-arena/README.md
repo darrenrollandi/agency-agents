@@ -9,8 +9,7 @@ A fast-paced first-person Roblox dueling game: 1v1 to 4v4, revolver and knife, f
 #    Windows: Invoke-RestMethod https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.ps1 | Invoke-Expression
 #    macOS:   curl -sSf https://raw.githubusercontent.com/rojo-rbx/rokit/main/scripts/install.sh | bash
 cd examples/duel-arena
-rokit install
-rokit add JohnnyMorganz/luau-lsp   # not pinned yet, see rokit.toml
+rokit install                      # rojo, stylua, selene, luau-lsp pinned in rokit.toml
 rojo plugin install                # puts the Rojo plugin into Studio
 
 # 2. Every session

@@ -15,14 +15,15 @@ Fast-paced first-person dueling. Step on a pad, get thrown into an arena, win ro
 
 ## Team sizes
 
-1v1, 2v2, 3v3, 4v4. **TBD:** all four at launch, or 1v1 + 2v2 first?
+1v1, 2v2, 3v3, 4v4. **Default chosen 07/09/2026 (D to confirm):** 1v1 ships first. The code supports all four; adding a size is a new `Pad_*` part in the lobby with a `TeamSize` attribute (`src/shared/Config/Modes.luau`).
 
 ## Round rules
 
 - Round ends when one team is fully eliminated.
-- **TBD:** round timer if nobody dies? Sudden-death rule (e.g. shrinking arena, one-hit knife only)?
-- **TBD:** friendly fire in team modes (assume off).
-- Between rounds: short countdown, everyone respawns at team spawns with full health and ammo, cooldowns reset.
+- **Default chosen 07/09/2026 (D to confirm):** 90 s round timer. On expiry the team with more survivors wins; a tie becomes sudden death (no timer, next elimination decides). A simultaneous wipe is a draw and the round is replayed. All in `src/shared/Config/Rounds.luau`.
+- **Default chosen 07/09/2026:** friendly fire off.
+- Between rounds: 3 s frozen countdown at team spawns, full health (ammo and cooldowns reset from P2/P3), 3 s result pause. Duel result shown for 5 s before everyone returns to the lobby.
+- Leaving mid-duel forfeits; the remaining team wins.
 
 ## Weapons
 
@@ -97,8 +98,8 @@ PC keyboard-mouse first. All gameplay input goes through `ContextActionService` 
 
 ## Maps
 
-- Lobby: flat baseplate with one pad per team size (P0/P1 scaffold).
-- Arenas: 2–3 maps by P8. Instanced from `ServerStorage.ArenaTemplates` per duel.
+- Lobby: flat 128×128 floor, spawn at z = +30, one step-on pad per team size (`Pad_1v1` at z = −20 so far). Standing on a pad queues you; stepping off leaves.
+- Arenas: 2–3 maps by P8. Instanced from `ServerStorage.ArenaTemplates` per duel into slots far from the lobby (x = 1000+). `Arena_Basic` (P1): 64×64 walled square, two centre pillars, teams spawn 48 studs apart facing each other.
 
 ## Credits
 
@@ -109,12 +110,12 @@ PC keyboard-mouse first. All gameplay input goes through `ContextActionService` 
 Mirrors CLAUDE.md §10. Strike each one out here as it's answered and move the answer into the relevant section above.
 
 1. Working title.
-2. Team sizes at launch.
-3. Round timer / sudden death.
+2. ~~Team sizes at launch~~ — default 1v1 first (see Team sizes). Confirm.
+3. ~~Round timer / sudden death~~ — default 90 s, tie → sudden death (see Round rules). Confirm.
 4. Abilities: count and loadout vs fixed.
 5. Progression currency.
 6. Revolver and knife numbers.
-7. Friendly fire.
+7. ~~Friendly fire~~ — default off. Confirm.
 8. Art direction.
 9. Launch platforms.
 10. Mason's credit.

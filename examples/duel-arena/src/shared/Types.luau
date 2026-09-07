@@ -2,6 +2,36 @@
 -- Types: shared type definitions used by both server and client.
 export type TeamMode = "1v1" | "2v2" | "3v3" | "4v4"
 
+export type TeamId = "A" | "B"
+
 export type DuelState = "Waiting" | "Countdown" | "Live" | "RoundOver" | "DuelOver" | "Cleanup"
+
+-- Server → client while a player stands in a pad queue. nil means "no longer queued".
+export type QueueStatus = {
+	padName: string,
+	mode: TeamMode,
+	count: number,
+	needed: number,
+}
+
+-- Server → client snapshot of the duel a player is in. Optional fields exist only in the
+-- state they belong to. Timestamps are workspace:GetServerTimeNow() seconds.
+export type DuelUpdate = {
+	duelId: number,
+	state: DuelState,
+	mode: TeamMode,
+	round: number,
+	team: TeamId,
+	scoreA: number,
+	scoreB: number,
+	aliveA: number,
+	aliveB: number,
+	suddenDeath: boolean,
+	forfeit: boolean,
+	countdownEndsAt: number?,
+	roundEndsAt: number?,
+	roundWinner: TeamId?,
+	duelWinner: TeamId?,
+}
 
 return {}
